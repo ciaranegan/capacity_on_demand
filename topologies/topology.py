@@ -20,7 +20,7 @@ class LinearTopo(Topo):
 			if previous:
 				# Connect the switch to the previous switch
 				self.addLink(switch, previous)
-			previous = switch1
+			previous = switch
 
 
 def test():
