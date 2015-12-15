@@ -24,7 +24,7 @@ class LinearTopo(Topo):
 
 
 def test():
-	topo = LinearTopo(k=4)
+	topo = LinearTopo()
 	net = Mininet(topo)
 	net.start()
 	dumpNodeConnections(net.hosts)
@@ -33,5 +33,5 @@ def test():
 
 
 if __name__ == '__main__':
-	setLogLevel('info')
+	setLogLevel('debug')
 	test()
