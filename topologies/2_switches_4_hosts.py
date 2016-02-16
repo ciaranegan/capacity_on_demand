@@ -24,3 +24,8 @@ class Switches4HostsTopo(Topo):
 
 topos = {'2switch4host': (lambda: Switches4HostsTopo())}
 
+if __name__ == '__main__':
+    topo = Switches4HostsTopo()
+    net = Mininet(topo=topo, switch=OVSKernelSwitch, mac=None)
+    net.addController('c0', controller=RemoteController, ip='127.0.0.1', port=6633)
+    net.start()
