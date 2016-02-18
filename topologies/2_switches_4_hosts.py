@@ -2,6 +2,9 @@ from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.util import irange, dumpNodeConnections
 from mininet.log import setLogLevel
+from mininet.cli import CLI
+from mininet.link import TCLink
+from mininet.node import OVSKernelSwitch, RemoteController
 
 class Switches4HostsTopo(Topo):
 
@@ -24,8 +27,20 @@ class Switches4HostsTopo(Topo):
 
 topos = {'2switch4host': (lambda: Switches4HostsTopo())}
 
-if __name__ == '__main__':
+def start_network():
     topo = Switches4HostsTopo()
-    net = Mininet(topo=topo, switch=OVSKernelSwitch, mac=None)
-    net.addController('c0', controller=RemoteController, ip='127.0.0.1', port=6633)
+    net = Mininet(topo=None,
+                  switch=OVSKernelSwitch,
+                  link=TCLink)
+    net.addController(name="c0",
+                      controller=RemoteController,
+                      ip='127.0.0.1',
+                      port=6633)
+    net.topo = topo
     net.start()
+    CLI(net)
+    net.stop()
+
+if __name__ == '__main__':
+    setLogLevel('info')
+    start_network()
