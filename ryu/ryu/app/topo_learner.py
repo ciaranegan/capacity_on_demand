@@ -31,7 +31,7 @@ from ryu.lib.packet import ether_types
 # Topology discovery
 from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
-
+import networkx as nx
 
 class SimpleSwitch(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
@@ -39,6 +39,7 @@ class SimpleSwitch(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
+        self.net = nx.DiGraph()
 
     def add_flow(self, datapath, in_port, dst, actions):
         ofproto = datapath.ofproto
@@ -121,3 +122,5 @@ class SimpleSwitch(app_manager.RyuApp):
             print links
             print switches
 
+            self.net.add_nodes_from(switches)
+            self.net.add_edges_from(links)
