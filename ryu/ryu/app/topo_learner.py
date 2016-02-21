@@ -114,13 +114,13 @@ class SimpleSwitch(app_manager.RyuApp):
             self.logger.info("Illeagal port state %s %s", port_no, reason)
 
     @set_ev_cls(event.EventSwitchEnter)
-        def get_topology_data(self, ev):
-            switch_list = get_switch(self.topology_api_app, None)
-            switches    = [switch.dp.id for switch in switch_list]
-            links_list  = get_link(self.topology_api_app, None)
-            links       = [(link.src.dpid,link.dst.dpid,{'port':link.src.port_no}) for link in links_list]
-            print links
-            print switches
+    def get_topology_data(self, ev):
+        switch_list = get_switch(self.topology_api_app, None)
+        switches    = [switch.dp.id for switch in switch_list]
+        links_list  = get_link(self.topology_api_app, None)
+        links       = [(link.src.dpid,link.dst.dpid,{'port':link.src.port_no}) for link in links_list]
+        print links
+        print switches
 
-            self.net.add_nodes_from(switches)
-            self.net.add_edges_from(links)
+        self.net.add_nodes_from(switches)
+        self.net.add_edges_from(links)
