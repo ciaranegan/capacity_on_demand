@@ -40,6 +40,9 @@ class SimpleSwitch(app_manager.RyuApp):
         super(SimpleSwitch, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
         self.net = nx.DiGraph()
+        self.nodes = {}
+        self.links = {}
+        self.topology_api_app = self
 
     def add_flow(self, datapath, in_port, dst, actions):
         ofproto = datapath.ofproto
@@ -115,9 +118,11 @@ class SimpleSwitch(app_manager.RyuApp):
 
     @set_ev_cls(event.EventSwitchEnter)
     def get_topology_data(self, ev):
-        switch_list = get_switch(self, None)
+        msg = ev.msg
+        dpid = msg.datapath.id
+        switch_list = get_switch(self.topology_api_app, dpid)
         switches    = [switch.dp.id for switch in switch_list]
-        links_list  = get_link(self, None)
+        links_list  = get_link(self.topology_api_app, dpid)
         links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
         print "**** Links:"
         print links
