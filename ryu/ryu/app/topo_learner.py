@@ -30,7 +30,7 @@ from ryu.lib.packet import ether_types
 
 # Topology discovery
 from ryu.topology import event, switches
-from ryu.topology.api import get_switch, get_link
+from ryu.topology.api import get_all_switch, get_all_link, get_all_host
 import networkx as nx
 
 class SimpleSwitch(app_manager.RyuApp):
