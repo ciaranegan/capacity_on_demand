@@ -30,7 +30,8 @@ from ryu.lib.packet import ether_types
 
 # Topology discovery
 from ryu.topology import event, switches
-from ryu.topology.api import get_all_switch, get_all_link, get_all_host
+from ryu.topology.api import get_all_switch, get_all_link
+from ryu.topology.api import get_host
 import networkx as nx
 
 class SimpleSwitch(app_manager.RyuApp):
@@ -118,12 +119,11 @@ class SimpleSwitch(app_manager.RyuApp):
 
     @set_ev_cls(event.EventSwitchEnter)
     def get_topology_data(self, ev):
-        msg = ev.msg
         switch_list = get_all_switch(self.topology_api_app)
         switches    = [switch.dp.id for switch in switch_list]
         links_list  = get_all_link(self.topology_api_app)
         links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
-        hosts       = get_all_host(self.topology_api_app)
+        hosts       = get_host(self.topology_api_app)
         print "**** Links:"
         print links
         print "**** Switches:"
