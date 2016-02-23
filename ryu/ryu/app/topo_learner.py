@@ -119,15 +119,17 @@ class SimpleSwitch(app_manager.RyuApp):
     @set_ev_cls(event.EventSwitchEnter)
     def get_topology_data(self, ev):
         msg = ev.msg
-        dpid = msg.datapath.id
-        switch_list = get_switch(self.topology_api_app, dpid)
+        switch_list = get_all_switch(self.topology_api_app)
         switches    = [switch.dp.id for switch in switch_list]
-        links_list  = get_link(self.topology_api_app, dpid)
+        links_list  = get_all_link(self.topology_api_app)
         links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
+        hosts       = get_all_host(self.topology_api_app)
         print "**** Links:"
         print links
         print "**** Switches:"
         print switches
+        print "**** Hosts:"
+        print hosts
         print "==============================================="
 
         self.net.add_nodes_from(switches)
