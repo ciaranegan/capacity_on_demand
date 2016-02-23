@@ -34,6 +34,9 @@ from ryu.topology.api import get_all_switch, get_all_link
 from ryu.topology.api import get_host
 import networkx as nx
 
+# QoS imports
+from ryu.app.qos.qos_tracker import QoSReservation, QosTracker
+
 class SimpleSwitch(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
 
@@ -44,6 +47,7 @@ class SimpleSwitch(app_manager.RyuApp):
         self.nodes = {}
         self.links = {}
         self.topology_api_app = self
+        self.qos_tracker = QosTracker()
 
     def add_flow(self, datapath, in_port, dst, actions):
         ofproto = datapath.ofproto
@@ -122,7 +126,7 @@ class SimpleSwitch(app_manager.RyuApp):
         switch_list = get_all_switch(self.topology_api_app)
         switches    = [switch.dp.id for switch in switch_list]
         links_list  = get_all_link(self.topology_api_app)
-        links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
+        links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no, 'bw': link.bw}) for link in links_list]
         hosts       = get_host(self.topology_api_app)
         print "**** Links:"
         print links
@@ -134,4 +138,4 @@ class SimpleSwitch(app_manager.RyuApp):
 
         self.net.add_nodes_from(switches)
         self.net.add_edges_from(links)
-
+        self.qos_tracker.topology = self.net
