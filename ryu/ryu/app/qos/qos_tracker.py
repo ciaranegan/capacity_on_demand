@@ -1,4 +1,10 @@
 from enum import Enum
+from sqlalchemy import (Column, ForeignKey, Integer, String, create_engine,
+						Float)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+Base = declarative_base()
 
 INGRESS = "ingress"
 EGRESS = "egress"
@@ -16,46 +22,54 @@ class QoSTracker:
 		self.reservations.remove(res)
 
 
-class QoSReservation:
+class QoSReservation(Base):
 	"""
 	Class to represent a bandwidth allocation.
 	"""
-	def __init__(self, src, dst, bw, mpls_label=None):
-		self.src = src
-		self.dst = dst
-		self.bw = bw
-		self.mpls_label = mpls_label
+	__tablename__ = 'reservation'
 
-class QoSReservationPort:
+	id = Column(Integer, primary_key=True, auto_increment=True)
+	src = Column(String)
+	dst = Column(String)
+	bw = Column(Float)
+	switches = relationship("QoSSwitch")
+
+class QoSPortReservation:
 	"""
 	Class to represent an allocation for a specific port.
 	"""
-	def __init__(self, port_id, bw, reserv_id):
-		self.port_id = port_id
-		self.bw = bw
-		self.reservation = reserv_id
+	__tablename__ = "port_reservation"
+
+	id = Column(Integer, primary_key=True, auto_increment=True)
+	port = Column(Integer, ForeignKey("port.id"))
+	bw = Column(Integer)
+	reservation = Column(Integer, ForeignKey("reservation.id"))
 
 
 class QoSSwitch:
 	"""
 	Class to represent a switch.
 	"""
-	SWITCH_TYPE = Enum(INGRESS, EGRESS)
+	__tablename__ = "switch"
 
-	def __init__(self, dpid, switch_type=SWITCH_TYPE.EGRESS):
-		self.dpid = dpid
-		self.switch_type = switch_type
+	TYPE = Enum(INGRESS, EGRESS)
+
+	dpid = Column(Integer, primary_key=True)
+	switch_type = Column(ENUM(*TYPE), default=TYPE.EGRESS)
+	ports = relationship("QoSPort")
 
 
 class QoSPort:
 	"""
 	Class to represent a port.
 	"""
-	PORT_TYPE = Enum(INGRESS, EGRESS)
+	TYPE = Enum(INGRESS, EGRESS)
 
-	def __init__(self, port_no, dpid, bw, port_type=PORT_TYPE.EGRESS):
-		self.no = port_no
-		self.dpid = dpid
-		self.bw = bw
-		self.port_type = port_type
+	id = Column(Integer, primary_key=True, auto_increment=True)
+	port_no = Column(Integer)
+	switch = Column(Integer, ForeignKey("switch.id"))
+	total_bw = Column(Float)
+	port_type = Column(Enum(*TYPE), default=TYPE.EGRESS)
+	reservations = relationship("QoSPortReservation")
+
 
