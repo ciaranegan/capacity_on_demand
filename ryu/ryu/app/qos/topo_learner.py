@@ -31,7 +31,6 @@ from ryu.lib.packet import ether_types
 # Topology discovery
 from ryu.topology import event, switches
 from ryu.topology.api import get_all_switch, get_all_link
-from ryu.topology.api import get_host
 import networkx as nx
 
 # QoS imports
@@ -127,13 +126,10 @@ class SimpleSwitch(app_manager.RyuApp):
         switches    = [switch.dp.id for switch in switch_list]
         links_list  = get_all_link(self.topology_api_app)
         links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no, 'bw': link.bw}) for link in links_list]
-        hosts       = get_host(self.topology_api_app)
         print "**** Links:"
         print links
         print "**** Switches:"
         print switches
-        print "**** Hosts:"
-        print hosts
         print "==============================================="
 
         self.net.add_nodes_from(switches)
