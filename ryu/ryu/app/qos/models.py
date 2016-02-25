@@ -57,9 +57,20 @@ class QoSPort:
     TYPE = Enum(INGRESS, EGRESS)
 
     id = Column(Integer, primary_key=True, auto_increment=True)
+    link = relationship("QoSLink")
+    switch = Column(Integer, ForeignKey("switch.dpid"))
     port_no = Column(Integer)
-    src_switch = Column(Integer, ForeignKey("switch.dpid"))
-    dst_switch = Column(Integer, ForeignKey("switch.dpid"))
-    total_bw = Column(Float)
     port_type = Column(Enum(*TYPE), default=TYPE.EGRESS)
     reservations = relationship("QoSPortReservation")
+    
+
+class QoSLink:
+	"""
+	Class to represent a link between to ports.
+	"""
+	__tablename__ = "link"
+
+	id = Column(Integer, primary_key=True, auto_increment=True)
+	src_port = Column(ForeignKey("port.id"))
+	dst_port = Column(ForeignKey("port.id"))
+	bandwidth = Column(Integer)
