@@ -1,7 +1,13 @@
 from sqlalchemy import create_engine
+from ryu.app.qos.models import Base
+from sqlalchemy.orm import sessionmaker
 
 class QoSTracker:
 
     def __init__(self):
-        self.engine = create_engine('sqlite:///my_db.sqlite')
+        self.engine = create_engine('sqlite:///my_db.db')
+        Session = sessionmaker()
+        Session.configure(bind=self.engine)
+        session = Session()
+        Base.metadata.create_all(self.engine)        
         print "HELLO THERE"
