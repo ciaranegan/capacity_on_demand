@@ -39,7 +39,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.nodes = {}
         self.links = {}
         self.topology_api_app = self
-        self.qos_tracker = QoSTracker()
+        self.qos = QoSTracker()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -135,13 +135,13 @@ class SimpleSwitch13(app_manager.RyuApp):
         switch_list = get_all_switch(self.topology_api_app)
         switches    = [switch.dp.id for switch in switch_list]
         links_list  = get_all_link(self.topology_api_app)
-        links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no, 'bw': link.bw}) for link in links_list]
-        print "**** Links:"
-        print links
-        print "**** Switches:"
-        print switches
-        print "==============================================="
+        print "**** LINKS LIST"
+        print links_list
+        links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
+
+        self.qos.add_links(links)
+        self.qos.add_switches(switches)
 
         self.net.add_nodes_from(switches)
         self.net.add_edges_from(links)
-        self.qos_tracker.topology = self.net
+        self.qos.topology = self.net
