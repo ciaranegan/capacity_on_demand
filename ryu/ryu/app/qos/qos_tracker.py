@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 class QoSTracker:
 
     def __init__(self):
+        self.topology = None
         self.engine = create_engine('sqlite:///my_db.db')
         Session = sessionmaker()
         Session.configure(bind=self.engine)
