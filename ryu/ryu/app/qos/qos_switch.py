@@ -27,6 +27,8 @@ from ryu.topology import event, switches
 from ryu.topology.api import get_all_switch, get_all_link
 import networkx as nx
 
+import urllib2
+
 from ryu.app.qos.qos_tracker import QoSTracker
 
 class SimpleSwitch13(app_manager.RyuApp):
@@ -133,11 +135,10 @@ class SimpleSwitch13(app_manager.RyuApp):
     @set_ev_cls(event.EventSwitchEnter)
     def get_topology_data(self, ev):
         switch_list = get_all_switch(self.topology_api_app)
-        switches    = [switch.dp.id for switch in switch_list]
-        links_list  = get_all_link(self.topology_api_app)
-        print "**** LINKS LIST"
-        print links_list
-        links       = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
+        switches = [switch.dp.id for switch in switch_list]
+
+        links_list = get_all_link(self.topology_api_app)
+        links = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
 
         self.qos.add_links(links)
         self.qos.add_switches(switches)

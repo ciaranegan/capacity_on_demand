@@ -26,7 +26,7 @@ class QoSSwitch(Base):
     """
     __tablename__ = "switch"
 
-    dpid = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     is_egress = Column(Boolean, default=True)
     ports = relationship("QoSPort")
 
@@ -37,7 +37,7 @@ class QoSPort(Base):
     """
     __tablename__ = "port"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    dpid = Column(Integer, primary_key=True, autoincrement=True)
     link = relationship("QoSLink")
     switch = Column(Integer, ForeignKey("switch.dpid"))
     port_no = Column(Integer)
@@ -64,6 +64,6 @@ class QoSLink(Base):
 	__tablename__ = "link"
 
 	id = Column(Integer, primary_key=True, autoincrement=True)
-	src_port = Column(ForeignKey("port.id"))
-	dst_port = Column(ForeignKey("port.id"))
+	src_port = Column(ForeignKey("port.dpid"))
+	dst_port = Column(ForeignKey("port.dpid"))
 	bandwidth = Column(Integer)

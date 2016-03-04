@@ -2,6 +2,8 @@ from sqlalchemy import create_engine
 from ryu.app.qos.models import Base
 from sqlalchemy.orm import sessionmaker
 
+from ryu.app.qos.models import *
+
 class QoSTracker:
 
     def __init__(self):
@@ -15,8 +17,8 @@ class QoSTracker:
 
 
     def add_links(self, link_data):
-        print "*****ADD LINKS"
-        print link_data
+        for link in link_data:
+            new_link = QosLink(src_port=link[0], dst_port=link[1], bandwidth=10)
 
     
     def add_switches(self, switch_data):
