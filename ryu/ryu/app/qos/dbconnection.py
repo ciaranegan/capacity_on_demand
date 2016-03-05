@@ -1,5 +1,8 @@
 from ryu.app.qos.models import *
 
+from sqlalchemy import create_engine
+from ryu.app.qos.models import Base
+from sqlalchemy.orm import sessionmaker
 
 class DBConnection:
 
