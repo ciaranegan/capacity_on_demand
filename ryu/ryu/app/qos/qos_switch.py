@@ -135,14 +135,16 @@ class SimpleSwitch13(app_manager.RyuApp):
     @set_ev_cls(event.EventSwitchEnter)
     def get_topology_data(self, ev):
         switch_list = get_all_switch(self.topology_api_app)
-        switches = [switch.dp.id for switch in switch_list]
+        # switches = [switch.dp.id for switch in switch_list]
 
         links_list = get_all_link(self.topology_api_app)
-        links = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
+        # links = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
 
-        self.qos.add_links(links)
-        self.qos.add_switches(switches)
+        self.qos.add_links(links_list)
+        self.qos.add_switches(switch_list)
 
-        self.net.add_nodes_from(switches)
-        self.net.add_edges_from(links)
-        self.qos.topology = self.net
+        print self.QoSTracker.get_all_links()
+
+        # self.net.add_nodes_from(switches)
+        # self.net.add_edges_from(links)
+        # self.qos.topology = self.net
