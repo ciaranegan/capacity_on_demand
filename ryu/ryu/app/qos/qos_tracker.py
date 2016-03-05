@@ -21,7 +21,8 @@ class QoSTracker:
             print link.dst
             print "-----------------------------"
             # new_link = QosLink(src_port=link[0], dst_port=link[1], bandwidth=10)
-            self.db.add_link({"src_port": link.src.dpid, "dst_port": link.dst.dpid, "bw": 10}) # TODO: fix this
+            self.db.add_link({"src_port": link.src.dpid, "dst_port": link.dst.dpid,
+                "bw": 10, port_no: link.port_no}) # TODO: fix this
 
     
     def add_switches(self, switch_data):

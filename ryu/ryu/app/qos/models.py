@@ -64,6 +64,7 @@ class QoSLink(Base):
 	__tablename__ = "link"
 
 	id = Column(Integer, primary_key=True, autoincrement=True)
-	src_port = Column(ForeignKey("port.dpid"))
-	dst_port = Column(ForeignKey("port.dpid"))
+	src = Column(ForeignKey("switch.id"))
+	dst = Column(ForeignKey("switch.id"))
+	port_no = Column(Integer)
 	bandwidth = Column(Integer)

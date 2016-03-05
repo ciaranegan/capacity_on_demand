@@ -18,8 +18,8 @@ class DBConnection:
         exists = self.session.query(QoSLink).filter(QoSLink.src_port==link_data["src_port"] \
                                     and QoSLink.dst_port==link_data["dst_port"]).exists()
         if not exists:
-            link = QoSLink(src_port=link_data["src_port"], dst_port=["dst_port"],
-                           bandwidth=link_data["bw"])
+            link = QoSLink(src=link_data["src_port"], dst=["dst_port"],
+                           bandwidth=link_data["bw"], port_no=["port_no"])
             return self.add_record(link)
 
 
