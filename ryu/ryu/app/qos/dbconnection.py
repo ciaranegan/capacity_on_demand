@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from ryu.app.qos.models import Base
 from sqlalchemy.orm import sessionmaker
 
+
 class DBConnection:
 
     def __init__(self, db_path):
@@ -18,8 +19,9 @@ class DBConnection:
         exists = self.session.query(QoSLink).filter(QoSLink.src_port==link_data["src_port"] \
                                     and QoSLink.dst_port==link_data["dst_port"]).exists()
         if not exists:
-            link = QoSLink(src=link_data["src_port"], dst=["dst_port"],
-                           bandwidth=link_data["bw"], port_no=["port_no"])
+            link = QoSLink(src=link_data["src_port"].dpid, dst=["dst_port"].dpid,
+                           bandwidth=link_data["bw"])
+
             return self.add_record(link)
 
 
