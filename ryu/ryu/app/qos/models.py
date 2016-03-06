@@ -14,7 +14,6 @@ class QoSSwitch(Base):
     __tablename__ = "switch"
 
     dpid = Column(Integer, primary_key=True)
-    # is_egress = Column(Boolean, default=True)
     ports = relationship("QoSPort")
 
 
@@ -28,8 +27,7 @@ class QoSPort(Base):
     link = relationship("QoSLink")
     switch = Column(Integer, ForeignKey("switch.dpid"))
     port_no = Column(Integer)
-    # is_egress = Column(Boolean, default=True)
-    # reservations = relationship("QoSPortReservation")
+    reservations = relationship("QoSPortReservation")
 
 
 class QoSLink(Base):
@@ -44,26 +42,25 @@ class QoSLink(Base):
     bandwidth = Column(Integer)
 
 
-# class QoSReservation(Base):
-#     """
-#     Class to represent a bandwidth allocation.
-#     """
-#     __tablename__ = 'reservation'
+class QoSReservation(Base):
+    """
+    Class to represent a bandwidth allocation.
+    """
+    __tablename__ = 'reservation'
 
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     src = Column(String)
-#     dst = Column(String)
-#     bw = Column(Float)
-#     switches = relationship("QoSSwitch")
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    src = Column(String)
+    dst = Column(String)
+    bw = Column(Float)
+    ports = relationship("QoSPortReservation")
 
 
-# class QoSPortReservation(Base):
-#     """
-#     Class to represent an allocation for a specific port.
-#     """
-#     __tablename__ = "port_reservation"
+class QoSPortReservation(Base):
+    """
+    Class to represent an allocation for a specific port.
+    """
+    __tablename__ = "port_reservation"
 
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     port = Column(Integer, ForeignKey("port.id"))
-#     bw = Column(Integer)
-#     reservation = Column(Integer, ForeignKey("reservation.id"))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    port = Column(Integer, ForeignKey("port.id"))
+    reservation = Column(Integer, ForeignKey("reservation.id"))
