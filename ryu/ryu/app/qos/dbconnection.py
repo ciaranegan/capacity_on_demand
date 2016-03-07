@@ -10,10 +10,10 @@ class DBConnection:
 
     def __init__(self, db_path):
         self.engine = create_engine(db_path)
-        Session = sessionmaker()
-        Session.configure(bind=self.engine)
-        self.session = Session()
+        Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
+        self.session = Session()
+
 
 
     def add_link(self, link_data):
