@@ -30,16 +30,16 @@ class DBConnection:
                                            .where(QoSPort.port_no==port.port_no)).scalar()
         if not exist:
             port = QoSPort(switch=port.dpid, port_no=port.port_no)
-            return self.session.add_record(port)
+            return self.add_record(port)
 
 
     def add_switch(self, switch):
-        exist = self.session.query(exists().where(QoSSwitch.dpid==switch.dpid)).scalar()
+        exist = self.session.query(exists().where(QoSSwitch.dpid==switch.dp.id)).scalar()
         if not exist:
-            switch = QoSSwitch(dpid=switch.dpid)
+            qos_switch = QoSSwitch(dpid=switch.dp.id)
             for port in switch.ports:
                 self.add_port(port)
-            return self.session.add_record(switch)
+            return self.add_record(qos_switch)
 
 
     def add_reservation(self, rsv):
@@ -50,15 +50,18 @@ class DBConnection:
                                            .where(QoSReservation.dst==rsv["src"])).scalar()
         if not exist:
             reservation = QoSReservation(src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"])
-            return self.session.commit(reservation)
+            return self.add_record(reservation)
 
 
     def add_port_reservation(self, prsv):
+        """
+        prsv: dict containing port reservation info
+        """
         exist = self.session.query(exists().where(QoSPortReservation.reservation==prsv["reservation"])
                                            .where(QoSPortReservation.port==prsv["port"])).scalar()
         if not exist:
             p_reservation = QoSPortReservation(port=prsv["port"], reservation=prsv["reservation"])
-            return self.session.add_record(p_reservation)
+            return self.add_record(p_reservation)
 
 
     def get_all_links(self):

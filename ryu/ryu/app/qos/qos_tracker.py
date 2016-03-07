@@ -35,3 +35,4 @@ class QoSTracker:
 
         for switch in switch_data:
             print switch
+            self.db.add_switch(switch)
