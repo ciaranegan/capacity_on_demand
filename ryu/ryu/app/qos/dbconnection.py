@@ -18,23 +18,23 @@ class DBConnection:
 
     def add_link(self, link_data):
         exist = self.session.query(exists().where(QoSLink.src==link_data["src_port"])
-                                            .where(QoSLink.dst==link_data["dst_port"]))
+                                            .where(QoSLink.dst==link_data["dst_port"])).scalar()
         if not exist:
-            link = QoSLink(src=link_data["src_port"].dpid, dst=["dst_port"].dpid,
+            link = QoSLink(src=link_data["src_port"], dst=link_data["dst_port"],
                            bandwidth=link_data["bw"])
             return self.add_record(link)
 
 
     def add_port(self, port):
         exist = self.session.query(exists().where(QoSPort.switch==port.dpid)
-                                           .where(QoSPort.port_no==port.port_no))
+                                           .where(QoSPort.port_no==port.port_no)).scalar()
         if not exist:
             port = QoSPort(switch=port.dpid, port_no=port.port_no)
             return self.session.add_record(port)
 
 
     def add_switch(self, switch):
-        exist = self.session.query(exists().where(QoSSwitch.dpid==switch.dpid))
+        exist = self.session.query(exists().where(QoSSwitch.dpid==switch.dpid)).scalar()
         if not exist:
             switch = QoSSwitch(dpid=switch.dpid)
             for port in switch.ports:
@@ -47,7 +47,7 @@ class DBConnection:
         rsv: dict containing reservation info
         """
         exist = self.session.query(exists().where(QoSReservation.src==rsv["src"])
-                                           .where(QoSReservation.dst==rsv["src"]))
+                                           .where(QoSReservation.dst==rsv["src"])).scalar()
         if not exist:
             reservation = QoSReservation(src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"])
             return self.session.commit(reservation)
@@ -55,7 +55,7 @@ class DBConnection:
 
     def add_port_reservation(self, prsv):
         exist = self.session.query(exists().where(QoSPortReservation.reservation==prsv["reservation"])
-                                           .where(QoSPortReservation.port==prsv["port"]))
+                                           .where(QoSPortReservation.port==prsv["port"])).scalar()
         if not exist:
             p_reservation = QoSPortReservation(port=prsv["port"], reservation=prsv["reservation"])
             return self.session.add_record(p_reservation)
@@ -107,6 +107,6 @@ class DBConnection:
 
 
     def add_record(self, record):
-        print "ADDING RECORD: " + str(record)
-        self.session.execute(record)
+        self.session.add(record)
+        self.session.commit()
         return record
