@@ -141,7 +141,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         # links = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
 
         self.qos.add_switches(switch_list)
-        print self.QoSTracker.get_all_switches()
+        print self.qos.get_all_switches()
         self.qos.add_links(links_list)
 
         # self.net.add_nodes_from(switches)
