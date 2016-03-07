@@ -17,8 +17,6 @@ class DBConnection:
 
 
     def add_link(self, link_data):
-        # exists = self.session.query(QoSLink).filter(QoSLink.src==link_data["src_port"] \
-        #                             and QoSLink.dst==link_data["dst_port"])
         exist = self.session.query(exists().where(QoSLink.src==link_data["src_port"])
                                             .where(QoSLink.dst==link_data["dst_port"]))
         if not exist:
@@ -28,16 +26,16 @@ class DBConnection:
 
 
     def add_port(self, port):
-        exists = self.session.query(QoSPort).filter(QoSPort.switch==port.dpid \
-                                    and QoSPort.port_no==port.port_no).exists()
-        if not exists:
+        exist = self.session.query(exists().where(QoSPort.switch==port.dpid)
+                                           .where(QoSPort.port_no==port.port_no))
+        if not exist:
             port = QoSPort(switch=port.dpid, port_no=port.port_no)
             return self.session.add_record(port)
 
 
     def add_switch(self, switch):
-        exists = self.session.query(QoSSwitch).filter(QoSSwitch.dpid==switch.dpid).exists()
-        if not exists:
+        exist = self.session.query(exists().where(QoSSwitch.dpid==switch.dpid))
+        if not exist:
             switch = QoSSwitch(dpid=switch.dpid)
             for port in switch.ports:
                 self.add_port(port)
@@ -48,18 +46,17 @@ class DBConnection:
         """
         rsv: dict containing reservation info
         """
-        exists = self.session.query(QoSReservation).filter(QoSReservation.src==rsv["src"] \
-                                    and QoSReservation.dst==rsv["dst"]).exists()
-        if not exists:
+        exist = self.session.query(exists().where(QoSReservation.src==rsv["src"])
+                                           .where(QoSReservation.dst==rsv["src"]))
+        if not exist:
             reservation = QoSReservation(src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"])
             return self.session.commit(reservation)
 
 
     def add_port_reservation(self, prsv):
-        exists = self.session.query(QoSPortReservation).filter(
-                    QoSPortReservation.reservation==prsv["reservation"] \
-                    and QoSPortReservation.port==prsv["port"]).exists()
-        if not exists:
+        exist = self.session.query(exists().where(QoSPortReservation.reservation==prsv["reservation"])
+                                           .where(QoSPortReservation.port==prsv["port"]))
+        if not exist:
             p_reservation = QoSPortReservation(port=prsv["port"], reservation=prsv["reservation"])
             return self.session.add_record(p_reservation)
 
