@@ -16,9 +16,11 @@ class DBConnection:
 
 
     def add_link(self, link_data):
-        exists = self.session.query(QoSLink).filter(QoSLink.src==link_data["src_port"] \
-                                    and QoSLink.dst==link_data["dst_port"])
-        if not self.session.query(exists(exists)):
+        # exists = self.session.query(QoSLink).filter(QoSLink.src==link_data["src_port"] \
+        #                             and QoSLink.dst==link_data["dst_port"])
+        exists = self.session.query(exists().where(QoSLink.src==link_data["src_port"])
+                                            .where(QoSLink.dst==link_data["dst_port"]))
+        if not exists:
             link = QoSLink(src=link_data["src_port"].dpid, dst=["dst_port"].dpid,
                            bandwidth=link_data["bw"])
             return self.add_record(link)
