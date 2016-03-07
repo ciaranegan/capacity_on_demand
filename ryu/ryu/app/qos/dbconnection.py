@@ -73,7 +73,7 @@ class DBConnection:
 
 
     def get_all_ports(self):
-        return self.session.query(QoSLink).all()
+        return self.session.query(QoSPort).all()
 
 
     def get_all_reservations(self):
