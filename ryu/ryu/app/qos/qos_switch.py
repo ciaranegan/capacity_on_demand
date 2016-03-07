@@ -140,10 +140,9 @@ class SimpleSwitch13(app_manager.RyuApp):
         links_list = get_all_link(self.topology_api_app)
         # links = [(link.src.dpid, link.dst.dpid, {'port': link.src.port_no}) for link in links_list]
 
-        self.qos.add_links(links_list)
         self.qos.add_switches(switch_list)
-
-        print self.QoSTracker.get_all_links()
+        print self.QoSTracker.get_all_switches()
+        self.qos.add_links(links_list)
 
         # self.net.add_nodes_from(switches)
         # self.net.add_edges_from(links)
