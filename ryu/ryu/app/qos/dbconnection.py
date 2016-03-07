@@ -36,6 +36,8 @@ class DBConnection:
         exists = self.session.query(QoSSwitch).filter(QoSSwitch.dpid==switch.dpid).exists()
         if not exists:
             switch = QoSSwitch(dpid=switch.dpid)
+            for port in switch.ports:
+                self.add_port(port)
             return self.session.add_record(switch)
 
 

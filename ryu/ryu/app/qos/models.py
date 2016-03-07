@@ -14,7 +14,7 @@ class QoSSwitch(Base):
     __tablename__ = "switch"
 
     dpid = Column(Integer, primary_key=True)
-    ports = relationship("QoSPort")
+    ports = relationship("QoSPort", backref="switch")
 
 
 class QoSPort(Base):
@@ -24,10 +24,9 @@ class QoSPort(Base):
     __tablename__ = "port"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    link = relationship("QoSLink")
     switch = Column(Integer, ForeignKey("switch.dpid"))
     port_no = Column(Integer)
-    reservations = relationship("QoSPortReservation")
+    reservations = relationship("QoSPortReservation", backref="port")
 
 
 class QoSLink(Base):
@@ -37,8 +36,8 @@ class QoSLink(Base):
     __tablename__ = "link"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    src = Column(ForeignKey("switch.id"))
-    dst = Column(ForeignKey("switch.id"), nullable=True)
+    src = Column(ForeignKey("port.switch"))
+    dst = Column(ForeignKey("port.switch"), nullable=True)
     bandwidth = Column(Integer)
 
 
@@ -52,7 +51,7 @@ class QoSReservation(Base):
     src = Column(String)
     dst = Column(String)
     bw = Column(Float)
-    ports = relationship("QoSPortReservation")
+    ports = relationship("QoSPortReservation", backref="reservation")
 
 
 class QoSPortReservation(Base):
