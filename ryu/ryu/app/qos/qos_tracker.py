@@ -12,6 +12,10 @@ class QoSTracker:
 
     def get_all_links(self):
         return self.db.get_all_links()
+    
+    
+    def get_all_switches(self):
+        return self.db.get_all_switches()
 
 
     def add_links(self, link_data):
@@ -28,3 +32,6 @@ class QoSTracker:
     def add_switches(self, switch_data):
         print "***** ADD SWITCHES"
         print switch_data
+
+        for switch in switch_data:
+            print switch
