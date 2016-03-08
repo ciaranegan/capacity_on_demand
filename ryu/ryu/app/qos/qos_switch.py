@@ -98,9 +98,13 @@ class SimpleSwitch13(app_manager.RyuApp):
         dst = eth.dst
         src = eth.src
 
+        ip = pkt.get_protocols(ipv4.ipv4)[0]
+        ip_src = ip.src
+        ip_dst = ip.dst
+
         print "-------------------"
-        print "SRC: " + str(src)
-        print "DST: " + str(src)
+        print "SRC: " + str(ip_src)
+        print "DST: " + str(ip_dst)
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
