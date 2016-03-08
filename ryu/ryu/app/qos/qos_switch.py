@@ -98,6 +98,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         dst = eth.dst
         src = eth.src
 
+        print "-------------------"
+        print "SRC: " + str(src)
+        print "DST: " + str(src)
+
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
