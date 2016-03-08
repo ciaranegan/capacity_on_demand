@@ -137,7 +137,8 @@ class SimpleSwitch13(app_manager.RyuApp):
         switch_list = get_all_switch(self.topology_api_app)
         self.qos.add_switches(switch_list)
 
-        self.qos.add_links(links_list)
         links_list = get_all_link(self.topology_api_app)
+        self.qos.add_links(links_list)
+ 
 
 
