@@ -19,7 +19,7 @@ from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
-from ryu.lib.packet import ethernet
+from ryu.lib.packet import ethernet, ipv4, arp
 from ryu.lib.packet import ether_types
 
 # Topology discovery
@@ -28,6 +28,8 @@ from ryu.topology.api import get_all_switch, get_all_link
 import networkx as nx
 
 import urllib2
+
+from IPython import embed
 
 from ryu.app.qos.qos_tracker import QoSTracker
 
@@ -98,13 +100,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         dst = eth.dst
         src = eth.src
 
-        ip = pkt.get_protocols(ipv4.ipv4)[0]
-        ip_src = ip.src
-        ip_dst = ip.dst
+        ip = pkt.get_protocols(ipv4.ipv4)
+        if ip:
+            ip_src = ip.src
+            ip_dst = ip.dst
 
-        print "-------------------"
-        print "SRC: " + str(ip_src)
-        print "DST: " + str(ip_dst)
+        arp_h = pkt.get_protocols(arp.arp)[0]
+        if arp_h:
+            arp_src = arp_h.dst_ip
+            arp_dst = arp_h.src_ip
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
@@ -147,6 +151,3 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         links_list = get_all_link(self.topology_api_app)
         self.qos.add_links(links_list)
- 
-
-

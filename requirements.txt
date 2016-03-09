@@ -3,3 +3,4 @@ enum34==1.1.2
 Flask==0.10.1
 networkx==1.11
 sqlalchemy==1.0.12
+ipython==4.1.2
