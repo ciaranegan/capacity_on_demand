@@ -101,14 +101,19 @@ class SimpleSwitch13(app_manager.RyuApp):
         src = eth.src
 
         ip = pkt.get_protocols(ipv4.ipv4)
-        if ip:
-            ip_src = ip.src
-            ip_dst = ip.dst
+        if len(ip) > 0:
+            ip_src = ip[0].src
+            ip_dst = ip[0].dst
 
-        arp_h = pkt.get_protocols(arp.arp)[0]
-        if arp_h:
-            arp_src = arp_h.dst_ip
-            arp_dst = arp_h.src_ip
+        else:
+            arp_h = pkt.get_protocols(arp.arp)
+            if arp_h:
+                ip_src = arp_h[0].dst_ip
+                ip_dst = arp_h[0].src_ip
+
+        res = self.qos.get_reservation_for_src_dst(ip_src, ip_dst)
+        if res:
+            print "MATCH FOR: " + str(ip_src) + " -- " + str(ip_dst)
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})

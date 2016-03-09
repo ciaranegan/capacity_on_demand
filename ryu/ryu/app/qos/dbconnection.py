@@ -15,7 +15,6 @@ class DBConnection:
         self.session = Session()
 
 
-
     def add_link(self, link_data):
         exist = self.session.query(exists().where(QoSLink.src==link_data["src_port"])
                                             .where(QoSLink.dst==link_data["dst_port"])).scalar()
@@ -98,15 +97,19 @@ class DBConnection:
 
 
     def get_ports_for_switch(self, dpid):
-        return self.session.query(QoSPort).filter(QoSPort.switch==dpid)
+        return self.session.query(QoSPort).filter(QoSPort.switch==dpid).first()
 
 
     def get_ports_for_link(self, link):
-        return self.session.query(QoSPort).filter(QoSPort.link==link)
+        return self.session.query(QoSPort).filter(QoSPort.link==link).first()
 
 
     def get_switch_for_port(self, port):
-        return self.session.query(QoSSwitch).filter(QoSSwitch.dpid==port.switch)
+        return self.session.query(QoSSwitch).filter(QoSSwitch.dpid==port.switch).first()
+
+
+    def get_reservation_for_src_dst(self, src, dst):
+        return self.session.query(QoSReservation).filter(QoSReservation.src==src and QoSReservation.dst==dst).first()
 
 
     def add_record(self, record):
