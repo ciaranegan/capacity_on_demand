@@ -10,7 +10,7 @@ def hello_world():
 @app.route('/reservation', methods=['POST'])
 def add_reservation():
     # POST request
-    # curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"hsllo": "asd", "asd": "asdas"}' http://localhost:5000/add_reservation
+    # curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"src": "10.0.0.1", "dst": "10.0.0.4", "bw": 10}' http://localhost:5000/add_reservation
     reservation_info = request.json
     if not reservation_info:
         return Response("Reservation info expected in json form", status=400, mimetype="application/json")
