@@ -112,6 +112,19 @@ class DBConnection:
         return self.session.query(QoSReservation).filter(QoSReservation.src==src and QoSReservation.dst==dst).first()
 
 
+    def get_reservation_for_id(self, res_id):
+        return self.session.query(QoSReservation).filter(QoSReservation.id==id).first()
+
+
+    def update_reservation(self, res_id, new_bw):
+        res = self.get_reservation_for_id(res_id)
+        if not res:
+            return None
+        res.bw = new_bw
+        self.session.commit()
+        return res
+
+
     def add_record(self, record):
         self.session.add(record)
         self.session.commit()
