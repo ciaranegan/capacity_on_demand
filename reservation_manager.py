@@ -40,4 +40,5 @@ class ReservationManager:
 
     def is_reservation_possible(self, src, dst, bw):
         # TODO: implement this
+        # TODO: needs to check if a new bw or an updated one
         return True
