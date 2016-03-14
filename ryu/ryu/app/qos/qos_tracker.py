@@ -27,6 +27,7 @@ class QoSTracker:
     def get_reservation_for_src_dst(self, src, dst):
         return self.db.get_reservation_for_src_dst(src, dst)
 
+
     def add_links(self, link_data):
         for link in link_data:
             self.db.add_link({"src_port": link.src.dpid, "dst_port": link.dst.dpid, "bw": 10}) # TODO: fix this

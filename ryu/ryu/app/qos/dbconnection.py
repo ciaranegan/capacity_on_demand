@@ -17,7 +17,7 @@ class DBConnection:
 
     def add_link(self, link_data):
         exist = self.session.query(exists().where(QoSLink.src==link_data["src_port"])
-                                            .where(QoSLink.dst==link_data["dst_port"])).scalar()
+                                           .where(QoSLink.dst==link_data["dst_port"])).scalar()
         if not exist:
             link = QoSLink(src=link_data["src_port"], dst=link_data["dst_port"],
                            bandwidth=link_data["bw"])
@@ -46,7 +46,7 @@ class DBConnection:
         rsv: dict containing reservation info
         """
         exist = self.session.query(exists().where(QoSReservation.src==rsv["src"])
-                                           .where(QoSReservation.dst==rsv["src"])).scalar()
+                                           .where(QoSReservation.dst==rsv["dst"])).scalar()
         if not exist:
             reservation = QoSReservation(src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"])
             return self.add_record(reservation)
