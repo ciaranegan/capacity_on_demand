@@ -1,5 +1,6 @@
 from flask import Flask, Response, request
-from ryu.app.qos.dbconnection import add_reservation
+from ryu.app.qos.models import Base
+from ryu.app.qos.dbconnection import DBConnection
 
 app = Flask(__name__)
 
