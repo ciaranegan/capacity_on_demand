@@ -18,7 +18,9 @@ class Switches4HostsTopo(Topo):
         host3 = self.addHost('h3')
 
         switch0 = self.addSwitch('s0')
+        switch0.setMAC('00:00:00:00:00:06')
         switch1 = self.addSwitch('s1')
+        switch1.setMAC('00:00:00:00:00:07')
 
         self.addLink(host0, switch0, bw=10)
         self.addLink(host1, switch0, bw=10)

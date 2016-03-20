@@ -19,9 +19,24 @@ from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
-from ryu.lib.packet import ethernet
+from ryu.lib.packet import ethernet, ipv4, arp
 from ryu.lib.packet import ether_types
 
+# Topology discovery
+from ryu.topology import event, switches
+from ryu.topology.api import get_all_switch, get_all_link
+import networkx as nx
+
+import urllib2
+
+from IPython import embed
+
+from ryu.app.qos.qos_tracker import QoSTracker
+
+HOST_MAP = {
+    "s0": ["10.0.0.1", "10.0.0.2"],
+    "s1": ["10.0.0.3", "10.0.0.4"]
+}
 
 class SimpleSwitch13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -29,6 +44,11 @@ class SimpleSwitch13(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch13, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
+        self.net = nx.DiGraph()
+        self.nodes = {}
+        self.links = {}
+        self.topology_api_app = self
+        self.qos = QoSTracker()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -85,13 +105,34 @@ class SimpleSwitch13(app_manager.RyuApp):
         dst = eth.dst
         src = eth.src
 
+        ip = pkt.get_protocols(ipv4.ipv4)
+        if len(ip) > 0:
+            ip_src = ip[0].src
+            ip_dst = ip[0].dst
+
+        else:
+            arp_h = pkt.get_protocols(arp.arp)
+            if arp_h:
+                ip_src = arp_h[0].dst_ip
+                ip_dst = arp_h[0].src_ip
+
+        
+
         dpid = datapath.id
+        if ip_src and ip_dst:
+            res = self.qos.get_reservation_for_src_dst(ip_src, ip_dst)
+            if res:
+                print "MATCH FOR: " + str(ip_src) + " -- " + str(ip_dst) + " in datapath: " + str(dpid)
+
         self.mac_to_port.setdefault(dpid, {})
 
         self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
+        print "DPID: " + str(dpid) + ": " + str(self.mac_to_port)
+
+        # DATAPATH represents a switch
 
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
@@ -116,5 +157,13 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
                                   in_port=in_port, actions=actions, data=data)
-        print "---------\n"+str(self.mac_to_port)+"\n------------"
         datapath.send_msg(out)
+
+
+    @set_ev_cls(event.EventSwitchEnter)
+    def get_topology_data(self, ev):
+        switch_list = get_all_switch(self.topology_api_app)
+        self.qos.add_switches(switch_list)
+
+        links_list = get_all_link(self.topology_api_app)
+        self.qos.add_links(links_list)
