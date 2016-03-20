@@ -61,3 +61,14 @@ class QoSPortReservation(Base):
     port = Column(Integer, ForeignKey("port.id"))
     reservation = Column(Integer, ForeignKey("reservation.id"))
 
+
+class QoSHost(Base):
+    """
+    Class to represent a host
+    """
+    __tablename__ = "host"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    mac = Column(String)
+    ip = Column(String, nullable=True)
+    port = Column(ForeignKey("port.id"))

@@ -2,6 +2,35 @@ from ryu.app.qos.models import *
 from ryu.app.qos.dbconnection import DBConnection
 
 from ryu.app.qos.test_reservations import get_reservations_for_2_4_topo
+
+s0_DPID = "16"
+s1_DPID = "32"
+
+# Mapping of port numbers to mac addresses
+TOPO_MAP = {
+    s0_DPID: {
+        2: {
+            "mac": '00:00:00:00:00:02',
+            "ip": '10.0.0.2'
+        },
+        1: {
+            "mac": '00:00:00:00:00:01',
+            "ip": '10.0.0.1'
+        }
+    },
+    s1_DPID: {
+        1: {
+            "mac": '00:00:00:00:00:03',
+            "ip": '10.0.0.3'
+        },
+        2: {
+            "mac": '00:00:00:00:00:04',
+            "ip": '10.0.0.4'
+        }
+    }
+}
+
+
 class QoSTracker:
 
     def __init__(self):
@@ -35,4 +64,6 @@ class QoSTracker:
     
     def add_switches(self, switch_data):
         for switch in switch_data:
-            self.db.add_switch(switch)
+            if str(switch.dp.id) in TOPO_MAP:
+                self.db.add_switch(switch, TOPO_MAP[str(switch.dp.id)])
+                # TODO: at this point, flow entries should be added. Hopefully using REST interface.

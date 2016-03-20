@@ -32,12 +32,22 @@ class DBConnection:
             return self.add_record(port)
 
 
-    def add_switch(self, switch):
+    def add_host(self, host_data, port_id):
+        exist = self.session.query(exists().where(QoSHost.mac==host_data["mac"])).scalar()
+        if not exist:
+            host = QoSHost(mac=host_data["mac"], ip=host_data["ip"], port=port_id)
+            return self.add_record(host)
+
+
+    def add_switch(self, switch, host_data):
         exist = self.session.query(exists().where(QoSSwitch.dpid==switch.dp.id)).scalar()
         if not exist:
             qos_switch = QoSSwitch(dpid=switch.dp.id)
             for port in switch.ports:
-                self.add_port(port)
+                port = self.add_port(port)
+                print host_data
+                if int(port.port_no) in host_data:
+                    host = self.add_host(host_data[port.port_no], port.id)
             return self.add_record(qos_switch)
 
 
@@ -126,6 +136,7 @@ class DBConnection:
 
 
     def add_record(self, record):
+        print "ADDING " + str(record) + " TO DATABASE"
         self.session.add(record)
         self.session.commit()
         return record
