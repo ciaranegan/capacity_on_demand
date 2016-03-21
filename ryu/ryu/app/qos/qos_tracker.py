@@ -69,15 +69,20 @@ class QoSTracker:
                 # TODO: at this point, flow entries should be added. Hopefully using REST interface.
 
 
-    def get_ports_for_switch(self, dpid):
-        return self.db.get_ports_for_switch(dpid)
-
-
-    def get_port_for_port_no(self, port_no, dpid):
-        return self.db.get_port_for_port_no(port_no, dpid)
-
-
-    def get_route_to_host(self, in_port, dst_ip, dpid):
-        # Find any connected switches
-
-        # Check what hosts they're connected to. If no luck, try their switches
+    def get_route_to_host(self, dst_ip, switch):
+        # Check if host is already connected to the switch
+        hosts = self.db.get_hosts_for_switch(switch.dpid)
+        if dst_ip in [host.ip for host in hosts]:
+            # We've found our host
+            for h in hosts:
+                if h.dst == dst_ip:
+                    host = h
+            return [h, switch]
+        # Get any connected switches
+        neighbours = self.db.get_switch_neighbours(switch)
+        if len(neighbours) > 0:
+            for neighbour in neighbours:
+                route = self.get_route_to_host(dst_ip, neighbour)
+                if route is not None:
+                    return route.append(switch)
+        return None
