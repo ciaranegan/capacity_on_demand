@@ -49,6 +49,9 @@ class QoSTracker:
     def get_all_ports(self):
         return self.db.get_all_ports()
 
+    def get_switch_for_dpid(self, dpid):
+        return self.db.get_switch_for_dpid(dpid)
+
     def get_reservation_for_src_dst(self, src, dst):
         return self.db.get_reservation_for_src_dst(src, dst)
 
@@ -68,21 +71,33 @@ class QoSTracker:
                 # TODO: at this point, flow entries should be added. Hopefully
                 # using REST interface.
 
-    def get_route_to_host(self, dst_ip, switch):
+    def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
+        # TODO: check for other topologies
         # Check if host is already connected to the switch
         hosts = self.db.get_hosts_for_switch(switch.dpid)
         if dst_ip in [host.ip for host in hosts]:
             # We've found our host
             for h in hosts:
-                if h.dst == dst_ip:
-                    host = h
-            return [h, switch]
+                if h.ip == dst_ip:
+                    return [h, switch]
+
         # Get any connected switches
-        neighbours = self.db.get_switch_neighbours(switch)
-        if len(neighbours) > 0:
-            for neighbour in neighbours:
-                route = self.get_route_to_host(dst_ip, neighbour)
-                if route is not None:
-                    return route.append(switch)
-        return None
+        if prev_switch:
+            neighbours = self.db.get_switch_neighbours(switch.dpid, exclude=prev_switch)
+        else:
+            neighbours = self.db.get_switch_neighbours(switch.dpid)
+
+        if len(neighbours) <= 0:
+            return None
+
+        for n in neighbours:
+            route = self.get_route_to_host(dst_ip, n, switch)
+            if route is not None and type(route[0]) is QoSHost:
+                route.append(switch)
+                break
+
+        if route:
+            return route
+        else:
+            return None

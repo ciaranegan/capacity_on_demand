@@ -103,3 +103,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         links_list = get_all_link(self)
         self.qos.add_links(links_list)
+
+        # Test data
+        switch = self.qos.get_switch_for_dpid("32")
+        path = self.qos.get_route_to_host("10.0.0.3", switch)

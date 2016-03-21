@@ -108,7 +108,7 @@ class DBConnection:
 
     def get_ports_for_switch(self, dpid):
         return self.session.query(QoSPort) \
-            .filter(QoSPort.switch == dpid).first()
+            .filter(QoSPort.switch == dpid).all()
 
     def get_ports_for_link(self, link):
         return self.session.query(QoSPort).filter(QoSPort.link == link).first()
@@ -126,21 +126,38 @@ class DBConnection:
         return self.session.query(QoSReservation) \
             .filter(QoSReservation.id == id).first()
 
+    def get_switch_for_dpid(self, dpid):
+        return self.session.query(QoSSwitch).filter(QoSSwitch.dpid == dpid).first()
+
     def get_port_for_port_no(self, port_no, dpid):
         return self.session.query(QoSPort) \
             .filter(QoSPort.switch == dpid and QoSPort.port_no == port_no) \
             .first()
 
-    def get_switch_neighbours(self, dpid):
+    def get_switch_neighbours(self, dpid, exclude=None):
         # TODO: may not work. prob need to join these for performance later.
         links = self.session.query(QoSLink).filter(QoSLink.src == dpid).all()
-        return self.session.query(QoSSwitch) \
-            .filter(QoSSwitch.dpid == link.dst for link in links).all()
+        switches = []
+        for link in links:
+            switch = self.session.query(QoSSwitch) \
+                        .filter(QoSSwitch.dpid == link.dst).first()
+            if switch:
+                if not exclude:
+                    switches.append(switch)
+                else:
+                    if switch.dpid != exclude.dpid:
+                        switches.append(switch)
+        return switches
 
     def get_hosts_for_switch(self, dpid):
         ports = self.get_ports_for_switch(dpid)
-        return self.session.query(QoSHost) \
-            .filter(QoSSwitch.port == port.id for port in ports).all()
+        hosts = []
+        for port in ports:
+            host = self.session.query(QoSHost) \
+                        .filter(QoSHost.port == port.id).first()
+            if host:
+                hosts.append(host)
+        return hosts
 
     def update_reservation(self, res_id, new_bw):
         res = self.get_reservation_for_id(res_id)
