@@ -160,10 +160,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         datapath.send_msg(out)
 
 
-    @set_ev_cls(event.EventSwitchEnter)
-    def get_topology_data(self, ev):
-        switch_list = get_all_switch(self.topology_api_app)
-        self.qos.add_switches(switch_list)
+    # @set_ev_cls(event.EventSwitchEnter)
+    # def get_topology_data(self, ev):
+    #     switch_list = get_all_switch(self.topology_api_app)
+    #     self.qos.add_switches(switch_list)
 
-        links_list = get_all_link(self.topology_api_app)
-        self.qos.add_links(links_list)
+    #     links_list = get_all_link(self.topology_api_app)
+    #     self.qos.add_links(links_list)
