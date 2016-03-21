@@ -29,7 +29,7 @@ class QoSPort(Base):
 
 class QoSLink(Base):
     """
-    Class to represent a link between to ports.
+    Class to represent a link between two switch ports.
     """
     __tablename__ = "link"
 

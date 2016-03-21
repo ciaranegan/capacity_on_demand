@@ -45,7 +45,6 @@ class DBConnection:
             qos_switch = QoSSwitch(dpid=switch.dp.id)
             for port in switch.ports:
                 port = self.add_port(port)
-                print host_data
                 if int(port.port_no) in host_data:
                     host = self.add_host(host_data[port.port_no], port.id)
             return self.add_record(qos_switch)
@@ -124,6 +123,21 @@ class DBConnection:
 
     def get_reservation_for_id(self, res_id):
         return self.session.query(QoSReservation).filter(QoSReservation.id==id).first()
+
+
+    def get_port_for_port_no(self, port_no, dpid):
+        return self.session.query(QoSPort).filter(QoSPort.switch==dpid and QoSPort.port_no==port_no).first()
+
+
+    def get_switch_neighbours(self, dpid):
+        # TODO: may not work. prob need to join these for performance later.
+        links = self.session.query(QoSLink).filter(QoSLink.src==dpid).all()
+        return self.session.query(QoSSwitch).filter(QoSSwitch.dpid==link.dst for link in links).all()
+
+
+    def get_hosts_for_switch(self, dpid):
+        ports = self.get_ports_for_switch(dpid)
+        return self.session.query(QoSHost).filter(QoSSwitch.port==port.id for port in ports).all()
 
 
     def update_reservation(self, res_id, new_bw):
