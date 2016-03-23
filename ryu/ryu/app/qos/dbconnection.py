@@ -87,6 +87,9 @@ class DBConnection:
     def get_all_ports(self):
         return self.session.query(QoSPort).all()
 
+    def get_all_hosts(self):
+        return self.session.query(QoSHost).all()
+
     def get_all_reservations(self):
         return self.session.query(QoSReservation).all()
 
@@ -158,6 +161,10 @@ class DBConnection:
             if host:
                 hosts.append(host)
         return hosts
+
+    def get_non_neighbouring_hosts(self, dpid):
+        ports = self.get_ports_for_switch(dpid)
+        hosts = self.get_all_hosts()
 
     def update_reservation(self, res_id, new_bw):
         res = self.get_reservation_for_id(res_id)

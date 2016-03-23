@@ -56,20 +56,11 @@ class QoSTracker:
         for res in test_reservations:
             self.db.add_reservation(res)
 
-    def get_all_links(self):
-        return self.db.get_all_links()
-
-    def get_all_switches(self):
-        return self.db.get_all_switches()
-
-    def get_all_ports(self):
-        return self.db.get_all_ports()
+    def get_reservation_for_src_dst(self, src, dst):
+        return self.db.get_reservation_for_src_dst(src, dst)
 
     def get_switch_for_dpid(self, dpid):
         return self.db.get_switch_for_dpid(dpid)
-
-    def get_reservation_for_src_dst(self, src, dst):
-        return self.db.get_reservation_for_src_dst(src, dst)
 
     def add_links(self, link_data):
         for link in link_data:
@@ -80,12 +71,34 @@ class QoSTracker:
                 "bw": 10
             })
 
+    def update_flows(self):
+        # TODO: udpates all switch flow tables
+        pass
+
+    def init_flows(self, switch, switch_map):
+        nearby_hosts = self.db.get_hosts_for_switch(switch.dpid)
+        for host in nearby_hosts:
+            # TODO: Add local flow entries
+            pass
+
+        nearby_ips = [str(h.ip) for h in nearby_hosts]
+        all_hosts = self.db.get_all_hosts()
+        hosts = []
+        for h in all_hosts:
+            if h.ip not in nearby_ips:
+                hosts.append(h)
+                # TODO: add non-local flow entries
+
     def add_switches(self, switch_data):
         for switch in switch_data:
             if str(switch.dp.id) in HOST_MAP:
-                self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
+                s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
                 # TODO: at this point, flow entries should be added. Hopefully
                 # using REST interface.
+
+        switches = self.db.get_all_switches()
+        for switch in switches:
+            self.init_flows(switch, SWITCH_MAP)
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
