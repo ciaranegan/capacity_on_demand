@@ -7,7 +7,7 @@ s0_DPID = "16"
 s1_DPID = "32"
 
 # Mapping of port numbers to mac addresses
-TOPO_MAP = {
+HOST_MAP = {
     s0_DPID: {
         2: {
             "mac": '00:00:00:00:00:02',
@@ -26,6 +26,22 @@ TOPO_MAP = {
         2: {
             "mac": '00:00:00:00:00:04',
             "ip": '10.0.0.4'
+        }
+    }
+}
+
+# Mapping of links to port_nos and their bandwidth
+SWITCH_MAP = {
+    s0_DPID: {
+        3: {
+            "dpid": s1_DPID,
+            "bw": 3
+        }
+    },
+    s1_DPID: {
+        3: {
+            "dpid": s0_DPID,
+            "bw": 3
         }
     }
 }
@@ -66,8 +82,8 @@ class QoSTracker:
 
     def add_switches(self, switch_data):
         for switch in switch_data:
-            if str(switch.dp.id) in TOPO_MAP:
-                self.db.add_switch(switch, TOPO_MAP[str(switch.dp.id)])
+            if str(switch.dp.id) in HOST_MAP:
+                self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
                 # TODO: at this point, flow entries should be added. Hopefully
                 # using REST interface.
 
