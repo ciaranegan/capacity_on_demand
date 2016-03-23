@@ -1,7 +1,15 @@
+import requests
+import json
+
 from ryu.app.qos.models import *
 from ryu.app.qos.dbconnection import DBConnection
 
 from ryu.app.qos.test_reservations import get_reservations_for_2_4_topo
+
+from IPython import embed
+
+ADD_FLOW_URI = "/stats/flowentry/add"
+LOCALHOST = "http://0.0.0.0:8080"
 
 s0_DPID = "16"
 s1_DPID = "32"
@@ -79,7 +87,20 @@ class QoSTracker:
         nearby_hosts = self.db.get_hosts_for_switch(switch.dpid)
         for host in nearby_hosts:
             # TODO: Add local flow entries
-            pass
+            out_port = self.db.get_port_for_host(host)
+            print out_port
+            print host
+            params = {
+                "dpid": int(switch.dpid),
+                "match": {
+                    "nw_dst": host.ip
+                },
+                "actions": [{
+                    "type": "OUTPUT",
+                    "port": out_port.port_no
+                }]
+            }
+            self.add_flow(params)
 
         nearby_ips = [str(h.ip) for h in nearby_hosts]
         all_hosts = self.db.get_all_hosts()
@@ -95,10 +116,15 @@ class QoSTracker:
                 s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
                 # TODO: at this point, flow entries should be added. Hopefully
                 # using REST interface.
+                self.init_flows(s, SWITCH_MAP)
 
         switches = self.db.get_all_switches()
         for switch in switches:
             self.init_flows(switch, SWITCH_MAP)
+
+    def add_flow(self, params):
+        request = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
+        print request.content
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles

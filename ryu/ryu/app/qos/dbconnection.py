@@ -23,6 +23,10 @@ class DBConnection:
                            dst=link_data["dst_port"],
                            bandwidth=link_data["bw"])
             return self.add_record(link)
+        else:
+            return self.session.query(QoSLink) \
+                .filter(QoSLink.src == link_data["src_port"] and
+                    QoSLink.dst == link_data["dst_port"]).first()
 
     def add_port(self, port):
         exist = self.session.query(exists()
@@ -31,6 +35,10 @@ class DBConnection:
         if not exist:
             port = QoSPort(switch=port.dpid, port_no=port.port_no)
             return self.add_record(port)
+        else:
+            return self.session.query(QoSPort) \
+                .filter(QoSPort.switch == port.dpid and
+                    QoSPort.port_no == port.port_no).first()
 
     def add_host(self, host_data, port_id):
         exist = self.session.query(
@@ -39,6 +47,8 @@ class DBConnection:
             host = QoSHost(
                 mac=host_data["mac"], ip=host_data["ip"], port=port_id)
             return self.add_record(host)
+        else:
+            return self.session.query(QoSHost.mac == host_data["mac"]).first()
 
     def add_switch(self, switch, host_data):
         exist = self.session.query(
@@ -53,6 +63,9 @@ class DBConnection:
                         port.id
                     )
             return self.add_record(qos_switch)
+        else:
+            return self.session.query(QoSSwitch) \
+                .filter(QoSSwitch.dpid == switch.dp.id).first()
 
     def add_reservation(self, rsv):
         """
@@ -112,6 +125,10 @@ class DBConnection:
     def get_ports_for_switch(self, dpid):
         return self.session.query(QoSPort) \
             .filter(QoSPort.switch == dpid).all()
+
+    def get_port_for_host(self, host):
+        return self.session.query(QoSPort) \
+            .filter(QoSPort.id == host.port).first()
 
     def get_ports_for_link(self, link):
         return self.session.query(QoSPort).filter(QoSPort.link == link).first()
