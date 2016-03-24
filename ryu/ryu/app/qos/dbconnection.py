@@ -109,6 +109,15 @@ class DBConnection:
     def get_all_port_reservations(self):
         return self.session.query(QoSPortReservation).all()
 
+    def get_out_port_between_switches(self, src, dst, switch_map):
+        link = self.session.query(QoSLink) \
+            .filter(QoSLink.src==src.dpid and QoSLink.dst==dst.dpid).first()
+        port_no = None
+        for port in switch_map[str(src.dpid)]:
+            if switch_map[str(src.dpid)][port]["dpid"] == dst.dpid:
+                port_no = port
+        return self.get_port_for_port_no(port_no, dst.dpid)
+
     def get_port_reservations_for_reservation(self, reservation):
         return self.session.query(QoSPortReservation) \
             .filter(QoSPortReservation.reservation == reservation)

@@ -8,9 +8,9 @@ from ryu.app.qos.test_reservations import get_reservations_for_2_4_topo
 
 from IPython import embed
 
-ADD_FLOW_URI = "/stats/flowentry/add"
 LOCALHOST = "http://0.0.0.0:8080"
-
+ADD_FLOW_URI = "/stats/flowentry/add"
+GET_FLOWS_URI = "/stats/flow/{}"
 s0_DPID = "16"
 s1_DPID = "32"
 
@@ -84,47 +84,60 @@ class QoSTracker:
         pass
 
     def init_flows(self, switch, switch_map):
+        flows = self.get_flows_for_switch(switch)
         nearby_hosts = self.db.get_hosts_for_switch(switch.dpid)
         for host in nearby_hosts:
-            # TODO: Add local flow entries
             out_port = self.db.get_port_for_host(host)
-            print out_port
-            print host
-            params = {
-                "dpid": int(switch.dpid),
-                "match": {
-                    "nw_dst": host.ip
-                },
-                "actions": [{
-                    "type": "OUTPUT",
-                    "port": out_port.port_no
-                }]
-            }
-            self.add_flow(params)
+            for other_host in nearby_hosts:
+                if other_host != host:
+                    print "ADDING FLOW FOR " + str(host.ip) + " to " + str(other_host.ip)
+                    params = {
+                        "dpid": int(switch.dpid),
+                        "match": {
+                            "eth_dst": host.mac,
+                            "in_port": other_host.port
+                        },
+                        "priority": 1,
+                        "actions": [{
+                            "type": "OUTPUT",
+                            "port": out_port.port_no
+                        }]
+                    }
+                    self.add_flow(params)
 
+        self.get_flows_for_switch(switch)
         nearby_ips = [str(h.ip) for h in nearby_hosts]
         all_hosts = self.db.get_all_hosts()
-        hosts = []
-        for h in all_hosts:
-            if h.ip not in nearby_ips:
-                hosts.append(h)
-                # TODO: add non-local flow entries
+        for ip in nearby_ips:
+            for host in all_hosts:
+                if ip != host.ip:
+                    path = self.get_route_to_host(host.ip, switch)
+                    if path:
+                        if len(path) > 1:
+                            prev_switch = switch
+                            for i in range(1, len(path)):
+                                if prev_switch.dpid != path[i].dpid:
+                                    self.db.get_out_port_between_switches(prev_switch, path[i], SWITCH_MAP)
+                        else:
+                            print "LOCALHOST: " + str(host.ip)
+
+
+        # TODO: add non-local flow entries
 
     def add_switches(self, switch_data):
         for switch in switch_data:
             if str(switch.dp.id) in HOST_MAP:
                 s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
-                # TODO: at this point, flow entries should be added. Hopefully
-                # using REST interface.
-                self.init_flows(s, SWITCH_MAP)
 
         switches = self.db.get_all_switches()
         for switch in switches:
             self.init_flows(switch, SWITCH_MAP)
 
     def add_flow(self, params):
-        request = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
-        print request.content
+        response = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
+
+    def get_flows_for_switch(self, switch):
+        response = requests.get((LOCALHOST+GET_FLOWS_URI).format(str(switch.dpid)))
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
@@ -135,7 +148,7 @@ class QoSTracker:
             # We've found our host
             for h in hosts:
                 if h.ip == dst_ip:
-                    return [h, switch]
+                    return [switch]
 
         # Get any connected switches
         if prev_switch:
@@ -148,11 +161,10 @@ class QoSTracker:
 
         for n in neighbours:
             route = self.get_route_to_host(dst_ip, n, switch)
-            if route is not None and type(route[0]) is QoSHost:
-                route.append(switch)
+            print route
+            if route is not None:
+                route.insert(0, switch)
+                print route
                 break
 
-        if route:
-            return route
-        else:
-            return None
+        return route
