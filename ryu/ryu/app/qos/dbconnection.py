@@ -109,14 +109,22 @@ class DBConnection:
     def get_all_port_reservations(self):
         return self.session.query(QoSPortReservation).all()
 
-    def get_out_port_between_switches(self, src, dst, switch_map):
-        link = self.session.query(QoSLink) \
-            .filter(QoSLink.src==src.dpid and QoSLink.dst==dst.dpid).first()
+    def get_port_for_id(self, port_id):
+        return self.session.query(QoSPort).filter(QoSPort.id==port_id).first()
+
+    def get_in_port_between_switches(self, src, dst, switch_map):
         port_no = None
         for port in switch_map[str(src.dpid)]:
-            if switch_map[str(src.dpid)][port]["dpid"] == dst.dpid:
+            if switch_map[str(src.dpid)][port]["dpid"] == str(dst.dpid):
                 port_no = port
         return self.get_port_for_port_no(port_no, dst.dpid)
+
+    def get_out_port_between_switches(self, src, dst, switch_map):
+        port_no = None
+        for port in switch_map[str(dst.dpid)]:
+            if switch_map[str(dst.dpid)][port]["dpid"] == str(src.dpid):
+                port_no = port
+        return self.get_port_for_port_no(port_no, src.dpid)
 
     def get_port_reservations_for_reservation(self, reservation):
         return self.session.query(QoSPortReservation) \
@@ -159,6 +167,7 @@ class DBConnection:
         return self.session.query(QoSSwitch).filter(QoSSwitch.dpid == dpid).first()
 
     def get_port_for_port_no(self, port_no, dpid):
+        print "LOOKING FOR PORT NUMBER: " + str(port_no)
         return self.session.query(QoSPort) \
             .filter(QoSPort.switch == dpid and QoSPort.port_no == port_no) \
             .first()

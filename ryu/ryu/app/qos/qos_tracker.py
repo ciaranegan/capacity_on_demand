@@ -84,13 +84,14 @@ class QoSTracker:
         pass
 
     def init_flows(self, switch, switch_map):
-        flows = self.get_flows_for_switch(switch)
+        # TODO: test on different topology!!!!!
+        # flows = self.get_flows_for_switch(switch)
         nearby_hosts = self.db.get_hosts_for_switch(switch.dpid)
         for host in nearby_hosts:
             out_port = self.db.get_port_for_host(host)
             for other_host in nearby_hosts:
                 if other_host != host:
-                    print "ADDING FLOW FOR " + str(host.ip) + " to " + str(other_host.ip)
+                    # print "ADDING FLOW FOR " + str(host.ip) + " to " + str(other_host.ip)
                     params = {
                         "dpid": int(switch.dpid),
                         "match": {
@@ -105,23 +106,49 @@ class QoSTracker:
                     }
                     self.add_flow(params)
 
-        self.get_flows_for_switch(switch)
         nearby_ips = [str(h.ip) for h in nearby_hosts]
         all_hosts = self.db.get_all_hosts()
-        for ip in nearby_ips:
+        for near_host in nearby_hosts:
             for host in all_hosts:
-                if ip != host.ip:
+                if host.ip not in nearby_ips:
+                # For all hosts except the local ones
                     path = self.get_route_to_host(host.ip, switch)
-                    if path:
-                        if len(path) > 1:
-                            prev_switch = switch
-                            for i in range(1, len(path)):
-                                if prev_switch.dpid != path[i].dpid:
-                                    self.db.get_out_port_between_switches(prev_switch, path[i], SWITCH_MAP)
-                        else:
-                            print "LOCALHOST: " + str(host.ip)
+                    # Find a path to the host
+                    if path and len(path) > 1:
+                        prev_switch = path[0]
+                        for i in range(1, len(path)):
+                            in_port = self.db.get_in_port_between_switches(prev_switch, path[i], SWITCH_MAP)
+                            if i == len(path) - 1:
+                                out_port = self.db.get_port_for_id(host.port)
+                            else:
+                                out_port = self.db.get_out_port_between_switches(prev_switch, path[i], SWITCH_MAP)
+                            print "----------------------"
+                            print "DST_HOST: " + str(host.ip)
+                            print "SRC_HOST: " + str(near_host.ip)
+                            print "DPID: " + str(path[i].dpid)
+                            print "PREV_DPID: " + str(prev_switch.dpid)
+                            print "IN_PORT: " + str(in_port.port_no)
+                            print "OUT_PORT: " + str(out_port.port_no)
+                            print "----------------------"
+                            params = {
+                                "dpid": int(path[i].dpid),
+                                "match": {
+                                    "eth_dst": host.mac,
+                                    "in_port": in_port.port_no
+                                },
+                                "priority": 1,
+                                "actions": [{
+                                    "type": "OUTPUT",
+                                    "port": out_port.port_no
+                                }]
+                            }
+                            self.add_flow(params)
+                            prev_switch = path[i]
+                    # TODO: add flow to path[0]
+                    else:
+                        print "SHOULD NOT HAVE REACHED THIS POINT"
 
-
+        # print self.get_flows_for_switch(switch)
         # TODO: add non-local flow entries
 
     def add_switches(self, switch_data):
@@ -161,10 +188,8 @@ class QoSTracker:
 
         for n in neighbours:
             route = self.get_route_to_host(dst_ip, n, switch)
-            print route
             if route is not None:
                 route.insert(0, switch)
-                print route
                 break
 
         return route
