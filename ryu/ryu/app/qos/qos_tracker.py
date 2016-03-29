@@ -85,13 +85,11 @@ class QoSTracker:
 
     def init_flows(self, switch, switch_map):
         # TODO: test on different topology!!!!!
-        # flows = self.get_flows_for_switch(switch)
         nearby_hosts = self.db.get_hosts_for_switch(switch.dpid)
         for host in nearby_hosts:
             out_port = self.db.get_port_for_host(host)
             for other_host in nearby_hosts:
-                if other_host != host:
-                    # print "ADDING FLOW FOR " + str(host.ip) + " to " + str(other_host.ip)
+                if other_host.ip != host.ip:
                     params = {
                         "dpid": int(switch.dpid),
                         "match": {
@@ -117,29 +115,22 @@ class QoSTracker:
                     if path and len(path) > 1:
                         prev_switch = path[0]
                         for i in range(1, len(path)):
-                            in_port = self.db.get_in_port_between_switches(prev_switch, path[i], SWITCH_MAP)
+                            in_port = self.db.get_in_port_no_between_switches(prev_switch, path[i], SWITCH_MAP)
                             if i == len(path) - 1:
-                                out_port = self.db.get_port_for_id(host.port)
+                                out_port = self.db.get_port_for_id(host.port).port_no
                             else:
-                                out_port = self.db.get_out_port_between_switches(prev_switch, path[i], SWITCH_MAP)
-                            print "----------------------"
-                            print "DST_HOST: " + str(host.ip)
-                            print "SRC_HOST: " + str(near_host.ip)
-                            print "DPID: " + str(path[i].dpid)
-                            print "PREV_DPID: " + str(prev_switch.dpid)
-                            print "IN_PORT: " + str(in_port.port_no)
-                            print "OUT_PORT: " + str(out_port.port_no)
-                            print "----------------------"
+                                out_port = self.db.get_out_port_no_between_switches(prev_switch, path[i], SWITCH_MAP)
+
                             params = {
                                 "dpid": int(path[i].dpid),
                                 "match": {
                                     "eth_dst": host.mac,
-                                    "in_port": in_port.port_no
+                                    "in_port": in_port
                                 },
                                 "priority": 1,
                                 "actions": [{
                                     "type": "OUTPUT",
-                                    "port": out_port.port_no
+                                    "port": out_port
                                 }]
                             }
                             self.add_flow(params)
@@ -147,8 +138,8 @@ class QoSTracker:
                     # TODO: add flow to path[0]
                     else:
                         print "SHOULD NOT HAVE REACHED THIS POINT"
-
-        # print self.get_flows_for_switch(switch)
+        flows = self.get_flows_for_switch(switch)
+        # print "====================\nFLOWS FOR DPID: " + str(switch.dpid) + "\n" + str(flows)
         # TODO: add non-local flow entries
 
     def add_switches(self, switch_data):
@@ -161,6 +152,7 @@ class QoSTracker:
             self.init_flows(switch, SWITCH_MAP)
 
     def add_flow(self, params):
+        # print "ADDING FLOW: " + str(json.dumps(params))
         response = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
 
     def get_flows_for_switch(self, switch):
