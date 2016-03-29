@@ -136,12 +136,6 @@ class QoSTracker:
                             }
                             self.add_flow(params)
                             prev_switch = path[i]
-                    # TODO: add flow to path[0]
-                    else:
-                        print "SHOULD NOT HAVE REACHED THIS POINT"
-        flows = self.get_flows_for_switch(switch)
-        # print "====================\nFLOWS FOR DPID: " + str(switch.dpid) + "\n" + str(flows)
-        # TODO: add non-local flow entries
 
     def add_switches(self, switch_data):
         for switch in switch_data:
@@ -153,7 +147,6 @@ class QoSTracker:
             self.init_flows(switch, SWITCH_MAP)
 
     def add_flow(self, params):
-        # print "ADDING FLOW: " + str(json.dumps(params))
         response = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
 
     def get_flows_for_switch(self, switch):
