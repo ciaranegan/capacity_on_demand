@@ -90,11 +90,12 @@ class QoSTracker:
             out_port = self.db.get_port_for_host(host)
             for other_host in nearby_hosts:
                 if other_host.ip != host.ip:
+                    in_port = self.db.get_port_for_host(other_host)
                     params = {
                         "dpid": int(switch.dpid),
                         "match": {
                             "eth_dst": host.mac,
-                            "in_port": other_host.port
+                            "in_port": in_port.port_no
                         },
                         "priority": 1,
                         "actions": [{
