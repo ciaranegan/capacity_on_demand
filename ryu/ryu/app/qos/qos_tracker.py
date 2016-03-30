@@ -104,6 +104,20 @@ class QoSTracker:
                         }]
                     }
                     self.add_flow(params)
+                    params = {
+                        "dpid": int(switch.dpid),
+                        "match": {
+                            "arp_tpa": host.ip, 
+                            "eth_type": 2054,
+                            "in_port": in_port.port_no
+                        },
+                        "priority": 1,
+                        "actions": [{
+                            "type": "OUTPUT",
+                            "port": out_port.port_no
+                        }]
+                    }
+                    self.add_flow(params)
 
         nearby_ips = [str(h.ip) for h in nearby_hosts]
         all_hosts = self.db.get_all_hosts()
@@ -126,6 +140,20 @@ class QoSTracker:
                                 "dpid": int(path[i].dpid),
                                 "match": {
                                     "eth_dst": host.mac,
+                                    "in_port": in_port
+                                },
+                                "priority": 1,
+                                "actions": [{
+                                    "type": "OUTPUT",
+                                    "port": out_port
+                                }]
+                            }
+                            self.add_flow(params)
+                            params = {
+                                "dpid": int(path[i].dpid),
+                                "match": {
+                                    "arp_tpa": host.ip, 
+                                    "eth_type": 2054,
                                     "in_port": in_port
                                 },
                                 "priority": 1,
