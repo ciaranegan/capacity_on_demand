@@ -1,4 +1,5 @@
 import sys
+import os
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.util import irange, dumpNodeConnections
@@ -17,8 +18,8 @@ class Switches4HostsTopo(Topo):
         host2 = self.addHost('h2')
         host3 = self.addHost('h3')
 
-        switch0 = self.addSwitch('s0')
-        switch1 = self.addSwitch('s1')
+        switch0 = self.addSwitch('s0', dpid='0000000000000010')
+        switch1 = self.addSwitch('s1', dpid='0000000000000020')
 
         self.addLink(host0, switch0, bw=10)
         self.addLink(host1, switch0, bw=10)
@@ -36,6 +37,7 @@ def start_network(controller_ip):
     net.start()
     CLI(net)
     net.stop()
+    os.system('sudo mn -c')
 
 if __name__ == '__main__':
     setLogLevel('info')
