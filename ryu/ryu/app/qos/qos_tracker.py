@@ -83,6 +83,11 @@ class QoSTracker:
         # TODO: udpates all switch flow tables
         pass
 
+    def refresh_flows(self):
+        switches = self.db.get_all_switches()
+        for s in switches:
+            self.init_flows(s, SWITCH_MAP)
+
     def init_flows(self, switch, switch_map):
         # TODO: test on different topology!!!!!
         nearby_hosts = self.db.get_hosts_for_switch(switch.dpid)
@@ -94,8 +99,7 @@ class QoSTracker:
                     params = {
                         "dpid": int(switch.dpid),
                         "match": {
-                            "eth_dst": host.mac,
-                            "in_port": in_port.port_no
+                            "eth_dst": host.mac
                         },
                         "priority": 1,
                         "actions": [{
@@ -107,9 +111,8 @@ class QoSTracker:
                     params = {
                         "dpid": int(switch.dpid),
                         "match": {
-                            "arp_tpa": host.ip, 
-                            "eth_type": 2054,
-                            "in_port": in_port.port_no
+                            "arp_tpa": host.ip,
+                            "eth_type": 2054
                         },
                         "priority": 1,
                         "actions": [{
@@ -135,12 +138,10 @@ class QoSTracker:
                                 out_port = self.db.get_port_for_id(host.port).port_no
                             else:
                                 out_port = self.db.get_out_port_no_between_switches(prev_switch, path[i], SWITCH_MAP)
-
                             params = {
                                 "dpid": int(path[i].dpid),
                                 "match": {
-                                    "eth_dst": host.mac,
-                                    "in_port": in_port
+                                    "eth_dst": host.mac
                                 },
                                 "priority": 1,
                                 "actions": [{
@@ -152,9 +153,21 @@ class QoSTracker:
                             params = {
                                 "dpid": int(path[i].dpid),
                                 "match": {
-                                    "arp_tpa": host.ip, 
-                                    "eth_type": 2054,
-                                    "in_port": in_port
+                                    "ipv4_dst": host.ip,
+                                    "eth_type": 2054
+                                },
+                                "priority": 1,
+                                "actions": [{
+                                    "type": "OUTPUT",
+                                    "port": out_port
+                                }]
+                            }
+                            self.add_flow(params)
+                            params = {
+                                "dpid": int(path[i].dpid),
+                                "match": {
+                                    "arp_tpa": host.ip,
+                                    "eth_type": 2054
                                 },
                                 "priority": 1,
                                 "actions": [{
