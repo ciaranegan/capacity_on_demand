@@ -62,7 +62,12 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         test_reservations = get_reservations_for_2_4_topo()
         for res in test_reservations:
-            self.db.add_reservation(res)
+            self.add_reservation(res)
+        # self.build_topology()
+        self._current_mpls_label = 0
+
+    def build_topology(self):
+        pass
 
     def get_reservation_for_src_dst(self, src, dst):
         return self.db.get_reservation_for_src_dst(src, dst)
@@ -70,13 +75,18 @@ class QoSTracker:
     def get_switch_for_dpid(self, dpid):
         return self.db.get_switch_for_dpid(dpid)
 
+    def generate_mpls_label(self):
+        self._current_mpls_label += 1
+        return self._current_mpls_label
+
     def add_links(self, link_data):
+        # TODO: Not great way to do this
         for link in link_data:
-            # TODO: fix this
+            bw = SWITCH_MAP[str(link.src.dpid)][3]["bw"]
             self.db.add_link({
                 "src_port": link.src.dpid,
                 "dst_port": link.dst.dpid,
-                "bw": 10
+                "bw": bw
             })
 
     def update_flows(self):
@@ -220,3 +230,44 @@ class QoSTracker:
                 break
 
         return route
+
+    def add_reservation(self, rsv):
+        """
+        rsv: dict containing reservation info
+        """
+        print "---------\nHERE WE FUCKIN GO"
+        reservation = self.db.add_reservation(rsv)
+
+        in_port = self.db.get_port_for_id(reservation.in_port)
+        print "IN-PORT: " + str(in_port.port_no)
+        in_switch = self.db.get_switch_for_port(in_port)
+        print "IN-SWITCH: " + str(in_switch.dpid)
+        out_port = self.db.get_port_for_id(reservation.out_port)
+        print "OUT-PORT: " + str(out_port.port_no)
+        out_switch = self.db.get_switch_for_port(out_port)
+        print "OUT-SWITCH: " + str(out_switch.dpid)
+        path = self.get_route_to_host(rsv["dst"], in_switch)
+        print "PATH: " + str(path)
+        if not path:
+            print "BAD: NO PATH TO HOST"
+            return
+
+        if len(path) <= 1:
+            print "1 Switch"
+
+        else:
+            print "2 Switches"
+            in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
+            out_port_reservation = self.db.add_port_reservation(reservation.id, out_port.id)
+            for i in range(1, len(path) - 1):
+                print i
+                print path[i]
+            # Add flow to assign MPLS label to in_port
+            # Add flow to remove MPLS lable to out_port
+
+
+    def add_ingress_mpls_rule(self, port, mpls_label):
+        pass
+
+    def add_egress_mpls_rule(self, port, mpls_label):
+        pass

@@ -22,17 +22,17 @@ from ryu.lib.packet import packet, ethernet, arp, ether_types
 
 # Topology discovery
 from ryu.topology import event
-from ryu.topology.api import get_all_switch, get_all_link
+from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
 from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP
 
 from IPython import embed
 
-class SimpleSwitch13(app_manager.RyuApp):
+class QoSSwitch13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
-        super(SimpleSwitch13, self).__init__(*args, **kwargs)
+        super(QoSSwitch13, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
         self.qos = QoSTracker()
 
@@ -107,6 +107,8 @@ class SimpleSwitch13(app_manager.RyuApp):
             out_port = ofproto.OFPP_FLOOD
             arp_pkt = pkt.get_protocols(arp.arp)
             self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+            s = get_switch(self, dpid=16)
+            print type(s[0].dp)
 
 
         actions = [parser.OFPActionOutput(out_port)]
