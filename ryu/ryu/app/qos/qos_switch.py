@@ -34,7 +34,7 @@ class QoSSwitch13(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(QoSSwitch13, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        self.qos = QoSTracker()
+        self.qos = QoSTracker(self)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -113,16 +113,6 @@ class QoSSwitch13(app_manager.RyuApp):
 
         actions = [parser.OFPActionOutput(out_port)]
 
-        # install a flow to avoid packet_in next time
-        if out_port != ofproto.OFPP_FLOOD:
-            match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
-            # verify if we have a valid buffer_id, if yes avoid to send both
-            # flow_mod & packet_out
-            if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-                self.add_flow(datapath, 1, match, actions, msg.buffer_id)
-                return
-            else:
-                self.add_flow(datapath, 1, match, actions)
         data = None
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data
