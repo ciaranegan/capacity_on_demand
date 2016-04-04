@@ -21,11 +21,11 @@ class Switches4HostsTopo(Topo):
         switch0 = self.addSwitch('s0', dpid='0000000000000010')
         switch1 = self.addSwitch('s1', dpid='0000000000000020')
 
-        self.addLink(host0, switch0, bw=10)
-        self.addLink(host1, switch0, bw=10)
-        self.addLink(host2, switch1, bw=10)
-        self.addLink(host3, switch1, bw=10)
-        self.addLink(switch0, switch1, bw=3)
+        self.addLink(host0, switch0, bw=100)
+        self.addLink(host1, switch0, bw=100)
+        self.addLink(host2, switch1, bw=100)
+        self.addLink(host3, switch1, bw=100)
+        self.addLink(switch0, switch1, bw=50)
 
 topos = {'2switch4host': (lambda: Switches4HostsTopo())}
 
