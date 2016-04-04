@@ -75,20 +75,29 @@ class DBConnection:
                     .where(QoSReservation.src == rsv["src"])
                     .where(QoSReservation.dst == rsv["dst"])).scalar()
         if not exist:
+            in_switch = self.get_switch_for_ip(rsv["src"])
+            in_port = self.get_port_for_ip(rsv["src"])
+            out_switch = self.get_switch_for_ip(rsv["dst"])
+            out_port = self.get_port_for_ip(rsv["dst"])
             reservation = QoSReservation(
-                src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"])
+                src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"], mpls_label="2",
+                in_port=in_port.id, out_port=out_port.id)
             return self.add_record(reservation)
+        else:
+            return self.session.query(QoSReservation) \
+                .filter(QoSReservation.src == rsv["src"]) \
+                .filter(QoSReservation.dst == rsv["dst"]).first()
 
-    def add_port_reservation(self, prsv):
+    def add_port_reservation(self, reservation, port):
         """
         prsv: dict containing port reservation info
         """
         exist = self.session.query(exists()
-                    .where(QoSPortReservation.reservation == prsv["reservation"])
-                    .where(QoSPortReservation.port == prsv["port"])).scalar()
+                    .where(QoSPortReservation.reservation == reservation)
+                    .where(QoSPortReservation.port == port)).scalar()
         if not exist:
             p_reservation = QoSPortReservation(
-                port=prsv["port"], reservation=prsv["reservation"])
+                port=port, reservation=reservation)
             return self.add_record(p_reservation)
 
     def get_all_links(self):
@@ -139,9 +148,25 @@ class DBConnection:
             switches.append(self.get_switch_for_port(port))
         return switches
 
+    def get_switch_for_ip(self, ip):
+        host = self.session.query(QoSHost) \
+            .filter(QoSHost.ip == ip).first()
+        if not host:
+            return None
+        port = self.session.query(QoSPort) \
+            .filter(QoSPort.id == host.port).first()
+        return self.get_switch_for_port(port)
+
     def get_ports_for_switch(self, dpid):
         return self.session.query(QoSPort) \
             .filter(QoSPort.switch == dpid).all()
+
+    def get_host_for_ip(self, ip):
+        return self.session.query(QoSHost).filter(QoSHost.ip == ip).first()
+
+    def get_port_for_ip(self, ip):
+        host = self.get_host_for_ip(ip)
+        return self.get_port_for_id(host.port)
 
     def get_port_for_host(self, host):
         return self.session.query(QoSPort) \
