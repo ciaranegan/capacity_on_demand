@@ -105,11 +105,7 @@ class QoSSwitch13(app_manager.RyuApp):
             return
         else:
             out_port = ofproto.OFPP_FLOOD
-            arp_pkt = pkt.get_protocols(arp.arp)
             self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
-            s = get_switch(self, dpid=16)
-            print type(s[0].dp)
-
 
         actions = [parser.OFPActionOutput(out_port)]
 

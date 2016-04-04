@@ -6,8 +6,6 @@ from ryu.app.qos.dbconnection import DBConnection
 
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
-from ryu.app.qos.test_reservations import get_reservations_for_2_4_topo
-
 from IPython import embed
 
 LOCALHOST = "http://0.0.0.0:8080"
@@ -56,15 +54,11 @@ SWITCH_MAP = {
     }
 }
 
-
 class QoSTracker:
 
     def __init__(self, ryu_app):
         self.ryu_app = ryu_app
         self.db = DBConnection('sqlite:///my_db.db')
-        test_reservations = get_reservations_for_2_4_topo()
-        for res in test_reservations:
-            self.add_reservation(res)
         self._current_mpls_label = 0
 
     def get_reservation_for_src_dst(self, src, dst):
@@ -103,7 +97,7 @@ class QoSTracker:
             out_port = self.db.get_port_for_host(host)
             for other_host in nearby_hosts:
                 if other_host.ip != host.ip:
-                    ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)[0]
+                    ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
                     datapath = ryu_switch.dp
                     parser = datapath.ofproto_parser
 
@@ -132,7 +126,7 @@ class QoSTracker:
                             else:
                                 out_port = self.db.get_out_port_no_between_switches(prev_switch, path[i], SWITCH_MAP)
 
-                            ryu_switch = self.get_ryu_switch_for_dpid(path[i].dpid)[0]
+                            ryu_switch = self.get_ryu_switch_for_dpid(path[i].dpid)
                             datapath = ryu_switch.dp
                             parser = datapath.ofproto_parser
 
@@ -232,21 +226,40 @@ class QoSTracker:
             print "1 Switch"
 
         else:
-            print "2 Switches"
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
             out_port_reservation = self.db.add_port_reservation(reservation.id, out_port.id)
             for i in range(1, len(path) - 1):
                 print i
                 print path[i]
-            # Add flow to assign MPLS label to in_port
-            # Add flow to remove MPLS lable to out_port
+            self.add_ingress_mpls_rule(in_port, reservation.mpls_label,
+                reservation.src, reservation.dst)
+            # TODO: Add flow to remove MPLS lable to out_port
 
 
-    def add_ingress_mpls_rule(self, port, mpls_label):
-        pass
+    def add_ingress_mpls_rule(self, port, mpls_label, src_ip, dst_ip):
+        switch = self.db.get_switch_for_port(port)
+        ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
+        datapath = ryu_switch.dp
+        parser = datapath.ofproto_parser
 
-    def add_egress_mpls_rule(self, port, mpls_label):
-        pass
+        match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
+        actions = [parser.OFPActionPushMpls(),
+            parser.OFPActionSetField(mpls_label=mpls_label)]
+        self.add_flow(datapath, 1, match, actions)
+
+    def add_egress_mpls_rule(self, port, mpls_label, src_ip, dst_ip):
+        switch = self.db.get_switch_for_port(port)
+        ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
+        datapath = ryu_switch.dp
+        parser = datapath.ofproto_parser
+
+        match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
+        actions = [parser.OFPActionPopMpls()]
+        self.add_flow(datapath, 1, match, actions)
 
     def get_ryu_switch_for_dpid(self, dpid):
-        return get_switch(self.ryu_app, dpid=int(dpid))
+        switch = get_switch(self.ryu_app, dpid=int(dpid))
+        # switches = get_all_switch(self.ryu_app)
+        # print "GOODBYE"
+        # print "GET_RYU_SWITCH: " + str(switch)
+        return switch[0]
