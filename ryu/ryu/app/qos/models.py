@@ -49,7 +49,7 @@ class QoSReservation(Base):
     src = Column(String)
     dst = Column(String)
     bw = Column(Float)
-    mpls_label = Column(String)
+    mpls_label = Column(Integer)
     in_port = Column(Integer, ForeignKey("port.id"))
     out_port = Column(Integer, ForeignKey("port.id"))
 

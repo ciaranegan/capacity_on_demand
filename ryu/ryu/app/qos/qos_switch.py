@@ -33,6 +33,7 @@ class QoSSwitch13(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(QoSSwitch13, self).__init__(*args, **kwargs)
+        print "QoSSwitch"
         self.mac_to_port = {}
         self.qos = QoSTracker(self)
 

@@ -67,7 +67,7 @@ class DBConnection:
             return self.session.query(QoSSwitch) \
                 .filter(QoSSwitch.dpid == switch.dp.id).first()
 
-    def add_reservation(self, rsv):
+    def add_reservation(self, rsv, mpls_label):
         """
         rsv: dict containing reservation info
         """
@@ -80,7 +80,7 @@ class DBConnection:
             out_switch = self.get_switch_for_ip(rsv["dst"])
             out_port = self.get_port_for_ip(rsv["dst"])
             reservation = QoSReservation(
-                src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"], mpls_label="2",
+                src=rsv["src"], dst=rsv["dst"], bw=rsv["bw"], mpls_label=mpls_label,
                 in_port=in_port.id, out_port=out_port.id)
             return self.add_record(reservation)
         else:

@@ -209,7 +209,7 @@ class QoSTracker:
         """
         rsv: dict containing reservation info
         """
-        reservation = self.db.add_reservation(rsv)
+        reservation = self.db.add_reservation(rsv, self.generate_mpls_label())
 
         in_port = self.db.get_port_for_id(reservation.in_port)
         in_switch = self.db.get_switch_for_port(in_port)
@@ -228,33 +228,47 @@ class QoSTracker:
         else:
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
             out_port_reservation = self.db.add_port_reservation(reservation.id, out_port.id)
+
+            in_switch_out_port_no = self.db.get_out_port_no_between_switches(in_switch, path[1], SWITCH_MAP)
+            self.add_ingress_mpls_rule(in_port, in_switch_out_port_no,
+                reservation.mpls_label, reservation.src, reservation.dst)
+
+            out_switch_in_port_no = self.db.get_in_port_no_between_switches(path[len(path) - 2], out_switch, SWITCH_MAP)
+            out_switch_in_port = self.db.get_port_for_port_no(out_switch_in_port_no, out_switch.dpid)
+            self.add_egress_mpls_rule(out_switch_in_port, out_port.port_no,
+                reservation.mpls_label)
+            
             for i in range(1, len(path) - 1):
+                # TODO: change this to include all switches
                 print i
                 print path[i]
-            self.add_ingress_mpls_rule(in_port, reservation.mpls_label,
-                reservation.src, reservation.dst)
-            # TODO: Add flow to remove MPLS lable to out_port
 
-
-    def add_ingress_mpls_rule(self, port, mpls_label, src_ip, dst_ip):
-        switch = self.db.get_switch_for_port(port)
+    def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
+        switch = self.db.get_switch_for_port(in_port)
         ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
-        datapath = ryu_switch.dp
-        parser = datapath.ofproto_parser
+        dp = ryu_switch.dp
+        parser = dp.ofproto_parser
 
         match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
+
+        f = dp.ofproto_parser.OFPMatchField.make(
+            dp.ofproto.OXM_OF_MPLS_LABEL, mpls_label)
+
         actions = [parser.OFPActionPushMpls(),
-            parser.OFPActionSetField(mpls_label=mpls_label)]
-        self.add_flow(datapath, 1, match, actions)
+            parser.OFPActionSetField(f),
+            parser.OFPActionOutput(out_port_no)]
 
-    def add_egress_mpls_rule(self, port, mpls_label, src_ip, dst_ip):
-        switch = self.db.get_switch_for_port(port)
+        self.add_flow(dp, 1, match, actions)
+
+    def add_egress_mpls_rule(self, in_port, out_port_no, mpls_label):
+        switch = self.db.get_switch_for_port(in_port)
         ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
         datapath = ryu_switch.dp
         parser = datapath.ofproto_parser
 
-        match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
-        actions = [parser.OFPActionPopMpls()]
+        match = parser.OFPMatch(mpls_label=mpls_label)
+        actions = [parser.OFPActionPopMpls(),
+            parser.OFPActionOutput(out_port_no)]
         self.add_flow(datapath, 1, match, actions)
 
     def get_ryu_switch_for_dpid(self, dpid):
