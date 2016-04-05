@@ -20,8 +20,6 @@ class QoSSwitchRest13(qos_switch.QoSSwitch13):
 
     def __init__(self, *args, **kwargs):
         super(QoSSwitchRest13, self).__init__(*args, **kwargs)
-        print "QoSREST Constructor"
-        print self.qos
         self.switches = {}
         wsgi = kwargs["wsgi"]
         wsgi.register(QoSController, {simple_switch_instance_name : self})
@@ -37,7 +35,6 @@ class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
-        print "QoSController Constructor"
         self.simpl_switch_spp = data[simple_switch_instance_name]
 
 

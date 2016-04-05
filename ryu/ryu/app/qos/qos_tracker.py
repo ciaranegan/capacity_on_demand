@@ -13,6 +13,7 @@ ADD_FLOW_URI = "/stats/flowentry/add"
 GET_FLOWS_URI = "/stats/flow/{}"
 s0_DPID = "16"
 s1_DPID = "32"
+s2_DPID = "48"
 
 # Mapping of port numbers to mac addresses
 HOST_MAP = {
@@ -35,6 +36,8 @@ HOST_MAP = {
             "mac": '00:00:00:00:00:04',
             "ip": '10.0.0.4'
         }
+    },
+    s2_DPID: {
     }
 }
 
@@ -42,14 +45,24 @@ HOST_MAP = {
 SWITCH_MAP = {
     s0_DPID: {
         3: {
-            "dpid": s1_DPID,
-            "bw": 3
+            "dpid": s2_DPID,
+            "bw": 50
         }
     },
     s1_DPID: {
         3: {
+            "dpid": s2_DPID,
+            "bw": 50
+        }
+    },
+    s2_DPID: {
+        1: {
             "dpid": s0_DPID,
-            "bw": 3
+            "bw": 50
+        },
+        2: {
+            "dpid": s1_DPID,
+            "bw": 50
         }
     }
 }
@@ -71,10 +84,16 @@ class QoSTracker:
         self._current_mpls_label += 1
         return self._current_mpls_label
 
+    def get_bw_for_src_dst(self, src, dst):
+        src_map = SWITCH_MAP[str(src)]
+        for port in src_map:
+            if str(SWITCH_MAP[str(src)][port]["dpid"]) == str(dst):
+                return SWITCH_MAP[str(src)][port]["bw"]
+
     def add_links(self, link_data):
         # TODO: Not great way to do this
         for link in link_data:
-            bw = SWITCH_MAP[str(link.src.dpid)][3]["bw"]
+            bw = self.get_bw_for_src_dst(link.src.dpid, link.dst.dpid)
             self.db.add_link({
                 "src_port": link.src.dpid,
                 "dst_port": link.dst.dpid,
@@ -120,12 +139,10 @@ class QoSTracker:
                     if path and len(path) > 1:
                         prev_switch = path[0]
                         for i in range(1, len(path)):
-                            in_port = self.db.get_in_port_no_between_switches(prev_switch, path[i], SWITCH_MAP)
                             if i == len(path) - 1:
                                 out_port = self.db.get_port_for_id(host.port).port_no
                             else:
-                                out_port = self.db.get_out_port_no_between_switches(prev_switch, path[i], SWITCH_MAP)
-
+                                out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
                             ryu_switch = self.get_ryu_switch_for_dpid(path[i].dpid)
                             datapath = ryu_switch.dp
                             parser = datapath.ofproto_parser
@@ -160,8 +177,7 @@ class QoSTracker:
 
     def add_switches(self, switch_data):
         for switch in switch_data:
-            if str(switch.dp.id) in HOST_MAP:
-                s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
+            s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
 
         switches = self.db.get_all_switches()
         for switch in switches:
@@ -187,7 +203,6 @@ class QoSTracker:
             for h in hosts:
                 if h.ip == dst_ip:
                     return [switch]
-
         # Get any connected switches
         if prev_switch:
             neighbours = self.db.get_switch_neighbours(switch.dpid, exclude=prev_switch)
@@ -226,6 +241,7 @@ class QoSTracker:
             print "1 Switch"
 
         else:
+            # TODO: this stuff is probably broken too
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
             out_port_reservation = self.db.add_port_reservation(reservation.id, out_port.id)
 
@@ -237,7 +253,7 @@ class QoSTracker:
             out_switch_in_port = self.db.get_port_for_port_no(out_switch_in_port_no, out_switch.dpid)
             self.add_egress_mpls_rule(out_switch_in_port, out_port.port_no,
                 reservation.mpls_label)
-            
+
             for i in range(1, len(path) - 1):
                 # TODO: change this to include all switches
                 print i

@@ -121,14 +121,14 @@ class DBConnection:
     def get_port_for_id(self, port_id):
         return self.session.query(QoSPort).filter(QoSPort.id==port_id).first()
 
-    def get_in_port_no_between_switches(self, src, dst, switch_map):
+    def get_out_port_no_between_switches(self, src, dst, switch_map):
         port_no = None
         for port in switch_map[str(src.dpid)]:
             if switch_map[str(src.dpid)][port]["dpid"] == str(dst.dpid):
                 port_no = port
         return port_no
 
-    def get_out_port_no_between_switches(self, src, dst, switch_map):
+    def get_in_port_no_between_switches(self, src, dst, switch_map):
         port_no = None
         for port in switch_map[str(dst.dpid)]:
             if switch_map[str(dst.dpid)][port]["dpid"] == str(src.dpid):

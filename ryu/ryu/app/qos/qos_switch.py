@@ -33,7 +33,6 @@ class QoSSwitch13(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(QoSSwitch13, self).__init__(*args, **kwargs)
-        print "QoSSwitch"
         self.mac_to_port = {}
         self.qos = QoSTracker(self)
 
@@ -106,7 +105,7 @@ class QoSSwitch13(app_manager.RyuApp):
             return
         else:
             out_port = ofproto.OFPP_FLOOD
-            self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+            # self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
 
         actions = [parser.OFPActionOutput(out_port)]
 
