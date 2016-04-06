@@ -3,8 +3,8 @@ import json
 
 from ryu.app.qos.models import *
 from ryu.app.qos.dbconnection import DBConnection
-
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
+from ryu.ofproto import ether
 
 from IPython import embed
 
@@ -73,6 +73,7 @@ class QoSTracker:
         self.ryu_app = ryu_app
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
+        self._flows_added = 0
 
     def get_reservation_for_src_dst(self, src, dst):
         return self.db.get_reservation_for_src_dst(src, dst)
@@ -122,11 +123,11 @@ class QoSTracker:
 
                     match = parser.OFPMatch(eth_dst=host.mac)
                     actions = [parser.OFPActionOutput(out_port.port_no)]
-                    self.add_flow(ryu_switch.dp, 1, match, actions)
+                    self.add_flow(ryu_switch.dp, 2, match, actions)
 
-                    match = parser.OFPMatch(arp_tpa=host.ip)
+                    match = parser.OFPMatch(arp_tpa=host.ip, eth_type=2054)
                     actions = [parser.OFPActionOutput(out_port.port_no)]
-                    self.add_flow(ryu_switch.dp, 1, match, actions)
+                    self.add_flow(ryu_switch.dp, 2, match, actions)
 
         nearby_ips = [str(h.ip) for h in nearby_hosts]
         all_hosts = self.db.get_all_hosts()
@@ -149,29 +150,15 @@ class QoSTracker:
 
                             match = parser.OFPMatch(eth_dst=host.mac)
                             actions = [parser.OFPActionOutput(out_port)]
-                            self.add_flow(ryu_switch.dp, 1, match, actions)
+                            self.add_flow(ryu_switch.dp, 2, match, actions)
 
-                            match = parser.OFPMatch(ipv4_dst=host.ip)
+                            match = parser.OFPMatch(ipv4_dst=host.ip, eth_type=2048)
                             actions = [parser.OFPActionOutput(out_port)]
-                            self.add_flow(ryu_switch.dp, 1, match, actions)
+                            self.add_flow(ryu_switch.dp, 2, match, actions)
 
-                            params = {
-                                "dpid": int(path[i].dpid),
-                                "match": {
-                                    "arp_tpa": host.ip,
-                                    "eth_type": 2054
-                                },
-                                "priority": 1,
-                                "actions": [{
-                                    "type": "OUTPUT",
-                                    "port": out_port
-                                }]
-                            }
-                            self.add_rest_flow(params)
-
-                            # match = parser.OFPMatch(arp_tpa=host.ip)
-                            # actions = [parser.OFPActionOutput(out_port)]
-                            # self.add_flow(ryu_switch.dp, 1, match, actions)
+                            match = parser.OFPMatch(arp_tpa=host.ip, eth_type=2054)
+                            actions = [parser.OFPActionOutput(out_port)]
+                            self.add_flow(ryu_switch.dp, 2, match, actions)
 
                             prev_switch = path[i]
 
@@ -184,10 +171,14 @@ class QoSTracker:
             self.init_flows(switch, SWITCH_MAP)
 
     def add_rest_flow(self, params):
+        print "FLOW ADDED COUNT: " + str(self._flows_added+1)
+        self._flows_added += 1
         response = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
-        print "ADDING FLOW FOR DPID: " + str(datapath.id) + " MATCH: " + str(match) + " ACTIONS: " + str(actions)
+        # print "ADDING FLOW FOR DPID: " + str(datapath.id) + " MATCH: " + str(match) + " ACTIONS: " + str(actions)
+        print "FLOW ADDED COUNT: " + str(self._flows_added+1)
+        self._flows_added += 1
         self.ryu_app.add_flow(datapath, priority, match, actions, buffer_id)
 
     def get_flows_for_switch(self, switch):
@@ -254,10 +245,10 @@ class QoSTracker:
             self.add_egress_mpls_rule(out_switch_in_port, out_port.port_no,
                 reservation.mpls_label)
 
-            for i in range(1, len(path) - 1):
-                # TODO: change this to include all switches
-                print i
-                print path[i]
+            # for i in range(1, len(path) - 1):
+            #     # TODO: change this to include all switches
+            #     print i
+            #     print path[i]
 
     def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
         switch = self.db.get_switch_for_port(in_port)
@@ -265,16 +256,21 @@ class QoSTracker:
         dp = ryu_switch.dp
         parser = dp.ofproto_parser
 
-        match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
+        eth_IP = ether.ETH_TYPE_IP
+        eth_MPLS = ether.ETH_TYPE_MPLS
+
+        match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip, dl_type=eth_MPLS)
 
         f = dp.ofproto_parser.OFPMatchField.make(
             dp.ofproto.OXM_OF_MPLS_LABEL, mpls_label)
 
-        actions = [parser.OFPActionPushMpls(),
+        actions = [
+            parser.OFPActionPushMpls(eth_MPLS),
             parser.OFPActionSetField(f),
-            parser.OFPActionOutput(out_port_no)]
+            parser.OFPActionOutput(out_port_no)
+        ]
 
-        self.add_flow(dp, 1, match, actions)
+        self.add_flow(dp, 3, match, actions)
 
     def add_egress_mpls_rule(self, in_port, out_port_no, mpls_label):
         switch = self.db.get_switch_for_port(in_port)
@@ -282,14 +278,16 @@ class QoSTracker:
         datapath = ryu_switch.dp
         parser = datapath.ofproto_parser
 
+        eth_IP = ether.ETH_TYPE_IP
+        eth_MPLS = ether.ETH_TYPE_MPLS
+
         match = parser.OFPMatch(mpls_label=mpls_label)
-        actions = [parser.OFPActionPopMpls(),
+        match.set_dl_type(eth_MPLS)
+
+        actions = [parser.OFPActionOutput(datapath.ofproto.OFPP_CONTROLLER)]
+        actions = [parser.OFPActionPopMpls(eth_IP),
             parser.OFPActionOutput(out_port_no)]
-        self.add_flow(datapath, 1, match, actions)
+        self.add_flow(datapath, 3, match, actions)
 
     def get_ryu_switch_for_dpid(self, dpid):
-        switch = get_switch(self.ryu_app, dpid=int(dpid))
-        # switches = get_all_switch(self.ryu_app)
-        # print "GOODBYE"
-        # print "GET_RYU_SWITCH: " + str(switch)
-        return switch[0]
+        return get_switch(self.ryu_app, dpid=int(dpid))[0]

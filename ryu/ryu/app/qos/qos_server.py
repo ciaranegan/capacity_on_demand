@@ -44,10 +44,10 @@ class QoSController(ControllerBase):
         request_data = {
             "src": "10.0.0.1",
             "dst": "10.0.0.4",
-            "bw": 2
+            "bw": 20
         }
 
         simple_switch.qos.add_reservation(request_data)
         # mac_table = simple_switch.mac_to_port.get(dpid, {})
-        body = json.dumps({"mac_table": "y'alri"})
+        body = json.dumps({"mac_table": "hi"})
         return Response(content_type="application/json", body=body)
