@@ -15,10 +15,10 @@
 
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, HANDSHAKE_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from ryu.lib.packet import packet, ethernet, arp, ether_types
+from ryu.lib.packet import packet, ethernet, arp, ether_types, mpls
 
 # Topology discovery
 from ryu.topology import event
@@ -33,9 +33,9 @@ class QoSSwitch13(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(QoSSwitch13, self).__init__(*args, **kwargs)
-        print "QoSSwitch"
         self.mac_to_port = {}
         self.qos = QoSTracker(self)
+        self._error_count = 0
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -106,7 +106,15 @@ class QoSSwitch13(app_manager.RyuApp):
             return
         else:
             out_port = ofproto.OFPP_FLOOD
-            self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+            # self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+
+        mpls_packet = pkt.get_protocols(mpls.mpls)
+        if mpls_packet:
+            print "FOUND MPLS PACKET ARR"
+            if mpls_packet[0]:
+                print "FOUND MPLS PACKET"
+                self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+                print mpls_packet[0]
 
         actions = [parser.OFPActionOutput(out_port)]
 
@@ -125,3 +133,12 @@ class QoSSwitch13(app_manager.RyuApp):
 
         links_list = get_all_link(self)
         self.qos.add_links(links_list)
+
+
+    @set_ev_cls(ofp_event.EventOFPErrorMsg,
+        [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def _handle_reply(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        self._error_count+=1
+        print "***** ERROR - TYPE:" + str(msg.type) + " CODE:" + str(msg.code) + " COUNT:" + str(self._error_count)
