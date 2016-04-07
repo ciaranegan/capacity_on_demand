@@ -1,11 +1,12 @@
 import requests
 import json
+import struct
 
 from ryu.app.qos.models import *
 from ryu.app.qos.dbconnection import DBConnection
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 from ryu.ofproto import ether
-
+from ryu.lib.ip import ipv4_to_bin
 from IPython import embed
 
 LOCALHOST = "http://0.0.0.0:8080"
@@ -245,10 +246,27 @@ class QoSTracker:
             self.add_egress_mpls_rule(out_switch_in_port, out_port.port_no,
                 reservation.mpls_label)
 
-            # for i in range(1, len(path) - 1):
-            #     # TODO: change this to include all switches
-            #     print i
-            #     print path[i]
+            for i in range(1, len(path) - 1):
+                # TODO: change this to include all switches
+                print i
+                print path[i]
+                ryu_switch = self.get_ryu_switch_for_dpid(path[i].dpid)
+                dp = ryu_switch.dp
+                parser = dp.ofproto_parser
+
+                out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
+                print "PORT_NO: " + str(out_port)
+                eth_MPLS = ether.ETH_TYPE_MPLS
+
+                match = parser.OFPMatch()
+                match.set_dl_type(eth_MPLS)
+                match.set_mpls_label(reservation.mpls_label)
+
+                actions = [parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER),
+                    parser.OFPActionOutput(out_port)]
+
+                self.add_flow(dp, 3, match, actions)
+
 
     def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
         switch = self.db.get_switch_for_port(in_port)
@@ -259,7 +277,13 @@ class QoSTracker:
         eth_IP = ether.ETH_TYPE_IP
         eth_MPLS = ether.ETH_TYPE_MPLS
 
-        match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip, dl_type=eth_MPLS)
+        # match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
+        match = parser.OFPMatch()
+        match.set_dl_type(eth_IP)
+        nw_src = struct.unpack('!I', ipv4_to_bin(src_ip))[0]
+        match.set_ipv4_src(nw_src)
+        nw_dst = struct.unpack('!I', ipv4_to_bin(dst_ip))[0]
+        match.set_ipv4_dst(nw_dst)
 
         f = dp.ofproto_parser.OFPMatchField.make(
             dp.ofproto.OXM_OF_MPLS_LABEL, mpls_label)
@@ -281,10 +305,11 @@ class QoSTracker:
         eth_IP = ether.ETH_TYPE_IP
         eth_MPLS = ether.ETH_TYPE_MPLS
 
-        match = parser.OFPMatch(mpls_label=mpls_label)
+        # match = parser.OFPMatch(mpls_label=mpls_label)
+        match = parser.OFPMatch()
         match.set_dl_type(eth_MPLS)
+        match.set_mpls_label(mpls_label)
 
-        actions = [parser.OFPActionOutput(datapath.ofproto.OFPP_CONTROLLER)]
         actions = [parser.OFPActionPopMpls(eth_IP),
             parser.OFPActionOutput(out_port_no)]
         self.add_flow(datapath, 3, match, actions)
