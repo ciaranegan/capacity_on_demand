@@ -171,14 +171,7 @@ class QoSTracker:
         for switch in switches:
             self.init_flows(switch, SWITCH_MAP)
 
-    def add_rest_flow(self, params):
-        print "FLOW ADDED COUNT: " + str(self._flows_added+1)
-        self._flows_added += 1
-        response = requests.post(LOCALHOST+ADD_FLOW_URI, data=json.dumps(params))
-
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
-        # print "ADDING FLOW FOR DPID: " + str(datapath.id) + " MATCH: " + str(match) + " ACTIONS: " + str(actions)
-        print "FLOW ADDED COUNT: " + str(self._flows_added+1)
         self._flows_added += 1
         self.ryu_app.add_flow(datapath, priority, match, actions, buffer_id)
 
@@ -225,13 +218,8 @@ class QoSTracker:
 
         path = self.get_route_to_host(rsv["dst"], in_switch)
 
-        if not path:
-            print "BAD: NO PATH TO HOST"
+        if not or len(path) <= 1:
             return
-
-        if len(path) <= 1:
-            print "1 Switch"
-
         else:
             # TODO: this stuff is probably broken too
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
@@ -255,7 +243,6 @@ class QoSTracker:
                 parser = dp.ofproto_parser
 
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
-                print "PORT_NO: " + str(out_port)
                 eth_MPLS = ether.ETH_TYPE_MPLS
 
                 match = parser.OFPMatch()
@@ -277,7 +264,6 @@ class QoSTracker:
         eth_IP = ether.ETH_TYPE_IP
         eth_MPLS = ether.ETH_TYPE_MPLS
 
-        # match = parser.OFPMatch(ipv4_src=src_ip, ipv4_dst=dst_ip)
         match = parser.OFPMatch()
         match.set_dl_type(eth_IP)
         nw_src = struct.unpack('!I', ipv4_to_bin(src_ip))[0]
@@ -305,7 +291,6 @@ class QoSTracker:
         eth_IP = ether.ETH_TYPE_IP
         eth_MPLS = ether.ETH_TYPE_MPLS
 
-        # match = parser.OFPMatch(mpls_label=mpls_label)
         match = parser.OFPMatch()
         match.set_dl_type(eth_MPLS)
         match.set_mpls_label(mpls_label)

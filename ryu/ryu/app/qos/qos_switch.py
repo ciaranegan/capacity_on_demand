@@ -110,11 +110,8 @@ class QoSSwitch13(app_manager.RyuApp):
 
         mpls_packet = pkt.get_protocols(mpls.mpls)
         if mpls_packet:
-            print "FOUND MPLS PACKET ARR"
             if mpls_packet[0]:
-                print "FOUND MPLS PACKET"
                 self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
-                print mpls_packet[0]
 
         actions = [parser.OFPActionOutput(out_port)]
 
