@@ -24,7 +24,7 @@ from ryu.lib.packet import packet, ethernet, arp, ether_types, mpls
 from ryu.topology import event
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
-from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP
+from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID
 
 from IPython import embed
 
@@ -55,7 +55,10 @@ class QoSSwitch13(app_manager.RyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
         self.add_flow(datapath, 0, match, actions)
 
-    def add_flow(self, datapath, priority, match, actions, buffer_id=None):
+        # Add a flow to forward from table_id:0 to table_id:1
+        match = parser.OFPMatch()
+
+    def add_flow(self, datapath, priority, match, actions, table_id=FLOW_TABLE_ID, buffer_id=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
@@ -64,10 +67,10 @@ class QoSSwitch13(app_manager.RyuApp):
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
                                     priority=priority, match=match,
-                                    instructions=inst)
+                                    instructions=inst, table_id=table_id)
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
-                                    match=match, instructions=inst)
+                                    match=match, instructions=inst, table_id=table_id)
         datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)

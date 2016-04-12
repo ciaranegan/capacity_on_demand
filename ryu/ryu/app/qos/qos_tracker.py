@@ -16,6 +16,9 @@ s0_DPID = "16"
 s1_DPID = "32"
 s2_DPID = "48"
 
+METER_TABLE_ID = 0
+FLOW_TABLE_ID = 1
+
 # Mapping of port numbers to mac addresses
 HOST_MAP = {
     s0_DPID: {
@@ -124,11 +127,11 @@ class QoSTracker:
 
                     match = parser.OFPMatch(eth_dst=host.mac)
                     actions = [parser.OFPActionOutput(out_port.port_no)]
-                    self.add_flow(ryu_switch.dp, 2, match, actions)
+                    self.add_flow(ryu_switch.dp, 2, match, actions, FLOW_TABLE_ID)
 
                     match = parser.OFPMatch(arp_tpa=host.ip, eth_type=2054)
                     actions = [parser.OFPActionOutput(out_port.port_no)]
-                    self.add_flow(ryu_switch.dp, 2, match, actions)
+                    self.add_flow(ryu_switch.dp, 2, match, actions, FLOW_TABLE_ID)
 
         nearby_ips = [str(h.ip) for h in nearby_hosts]
         all_hosts = self.db.get_all_hosts()
@@ -151,15 +154,15 @@ class QoSTracker:
 
                             match = parser.OFPMatch(eth_dst=host.mac)
                             actions = [parser.OFPActionOutput(out_port)]
-                            self.add_flow(ryu_switch.dp, 2, match, actions)
+                            self.add_flow(ryu_switch.dp, 2, match, actions, FLOW_TABLE_ID)
 
                             match = parser.OFPMatch(ipv4_dst=host.ip, eth_type=2048)
                             actions = [parser.OFPActionOutput(out_port)]
-                            self.add_flow(ryu_switch.dp, 2, match, actions)
+                            self.add_flow(ryu_switch.dp, 2, match, actions, FLOW_TABLE_ID)
 
                             match = parser.OFPMatch(arp_tpa=host.ip, eth_type=2054)
                             actions = [parser.OFPActionOutput(out_port)]
-                            self.add_flow(ryu_switch.dp, 2, match, actions)
+                            self.add_flow(ryu_switch.dp, 2, match, actions, FLOW_TABLE_ID)
 
                             prev_switch = path[i]
 
@@ -171,9 +174,9 @@ class QoSTracker:
         for switch in switches:
             self.init_flows(switch, SWITCH_MAP)
 
-    def add_flow(self, datapath, priority, match, actions, buffer_id=None):
+    def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
-        self.ryu_app.add_flow(datapath, priority, match, actions, buffer_id)
+        self.ryu_app.add_flow(datapath, priority, match, actions, table_id, buffer_id)
 
     def get_flows_for_switch(self, switch):
         response = requests.get((LOCALHOST+GET_FLOWS_URI).format(str(switch.dpid)))
@@ -218,7 +221,7 @@ class QoSTracker:
 
         path = self.get_route_to_host(rsv["dst"], in_switch)
 
-        if not or len(path) <= 1:
+        if not path or len(path) <= 1:
             return
         else:
             # TODO: this stuff is probably broken too
