@@ -255,7 +255,7 @@ class QoSTracker:
                 actions = [parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER),
                     parser.OFPActionOutput(out_port)]
 
-                self.add_flow(dp, 3, match, actions)
+                self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
 
 
     def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
@@ -283,7 +283,7 @@ class QoSTracker:
             parser.OFPActionOutput(out_port_no)
         ]
 
-        self.add_flow(dp, 3, match, actions)
+        self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
 
     def add_egress_mpls_rule(self, in_port, out_port_no, mpls_label):
         switch = self.db.get_switch_for_port(in_port)
@@ -300,7 +300,7 @@ class QoSTracker:
 
         actions = [parser.OFPActionPopMpls(eth_IP),
             parser.OFPActionOutput(out_port_no)]
-        self.add_flow(datapath, 3, match, actions)
+        self.add_flow(datapath, 3, match, actions, FLOW_TABLE_ID)
 
     def get_ryu_switch_for_dpid(self, dpid):
         return get_switch(self.ryu_app, dpid=int(dpid))[0]

@@ -26,7 +26,6 @@ from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
 from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID, METER_TABLE_ID
 
-from IPython import embed
 
 class QoSSwitch13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
