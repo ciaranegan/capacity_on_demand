@@ -28,6 +28,7 @@ class Switches4HostsTopo(Topo):
         self.addLink(host2, switch1, bw=100)
         self.addLink(host3, switch1, bw=100)
 
+        # 50 Mbps bandwidth
         self.addLink(switch0, switch2, bw=50)
         self.addLink(switch1, switch2, bw=50)
 

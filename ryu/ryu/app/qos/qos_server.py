@@ -34,13 +34,14 @@ class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
-        self.simpl_switch_spp = data[simple_switch_instance_name]
+        print "INIT DATA: " + str(data)
+        self.simple_switch_app = data[simple_switch_instance_name]
 
 
     @route("add_reservation", add_reservation_url, methods=["POST"])
     def list_mac_table(self, req, **kwargs):
         data = req.json
-        simple_switch = self.simpl_switch_spp
+        simple_switch = self.simple_switch_app
         request_data = {
             "src": data["src"],
             "dst": data["dst"],
