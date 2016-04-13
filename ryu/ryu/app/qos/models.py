@@ -54,6 +54,13 @@ class QoSReservation(Base):
     out_port = Column(Integer, ForeignKey("port.id"))
 
 
+# class QoSFlow(Base):
+#     __tablename__ = "flow"
+
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     reservation = Column(Integer, ForeignKey("reservation.id"))
+
+
 class QoSPortReservation(Base):
     """
     Class to represent an allocation for a specific port.

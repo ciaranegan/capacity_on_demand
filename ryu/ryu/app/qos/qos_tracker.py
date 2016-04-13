@@ -16,8 +16,9 @@ s0_DPID = "16"
 s1_DPID = "32"
 s2_DPID = "48"
 
-METER_TABLE_ID = 0
-FLOW_TABLE_ID = 1
+PIR_TABLE_ID = 0
+CIR_TABLE_ID = 1
+FLOW_TABLE_ID = 2
 
 # Mapping of port numbers to mac addresses
 HOST_MAP = {
@@ -221,10 +222,15 @@ class QoSTracker:
 
         path = self.get_route_to_host(rsv["dst"], in_switch)
 
+        total_bw = self.get_max_bandwidth_for_path(path)
+        print "TOTAL_BW: " + str(total_bw)
+
+        available_bw = self.get_available_bandwidth_for_path(path)
+        print "AVAILABLE_BW: " + str(available_bw)
+
         if not path or len(path) <= 1:
             return
         else:
-            # TODO: this stuff is probably broken too
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
             out_port_reservation = self.db.add_port_reservation(reservation.id, out_port.id)
 
@@ -304,3 +310,45 @@ class QoSTracker:
 
     def get_ryu_switch_for_dpid(self, dpid):
         return get_switch(self.ryu_app, dpid=int(dpid))[0]
+
+    def get_max_bandwidth_for_path(self, path):
+        # TODO: doesn't work for smaller paths
+        bw = None
+        if len(path) > 2:
+            prev_switch = path[0]
+            for i in range(1, len(path)):
+                link = self.db.get_link_between_switches(prev_switch, path[i])
+                if bw is None:
+                    bw = link.bandwidth
+                # Take the smallest as the max reservation can only be as high as the smallest link
+                bw = min(bw, link.bandwidth)
+                prev_switch = path[i]
+        else:
+            print "SHORT PATH, LEN=" + str(len(path))
+
+        return bw
+
+
+    def get_available_bandwidth_for_path(self, path):
+        # TODO: doesn't work for smaller paths
+        total_bw = self.get_max_bandwidth_for_path(path)
+        # Can't just sum all the bws
+        if len(path) > 2:
+            prev_switch = path[0]
+            avail_link_bw = []
+            for i in range(1, len(path)):
+                link = self.db.get_link_between_switches(prev_switch, path[i])
+                link_bw = link.bandwidth
+                port_reservations = self.db.get_port_reservations_for_link(link, SWITCH_MAP)
+                if port_reservations:
+                    reservations = []
+                    for p in port_reservations:
+                        reservation = self.db.get_reservation_for_id(p.reservation)
+                        reservations.append(reservation)
+                        # total_bw -= reservation.bw
+                    for r in reservations:
+                        link_bw -= reservation.bw
+                avail_link_bw.append(link_bw)
+                prev_switch = path[i]
+
+        return min(avail_link_bw)

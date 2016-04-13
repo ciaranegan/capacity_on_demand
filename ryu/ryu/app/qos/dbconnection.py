@@ -148,6 +148,31 @@ class DBConnection:
             switches.append(self.get_switch_for_port(port))
         return switches
 
+    def get_port_reservations_for_link(self, link, switch_map):
+        switch_1 = self.get_switch_for_dpid(link.src)
+        switch_2 = self.get_switch_for_dpid(link.dst)
+
+        in_port_no = self.get_in_port_no_between_switches(switch_1, switch_2, switch_map)
+        out_port_no = self.get_out_port_no_between_switches(switch_1, switch_2, switch_map)
+
+        in_port = self.get_port_for_port_no(in_port_no, switch_2.dpid)
+        out_port = self.get_port_for_port_no(out_port_no, switch_1.dpid)
+
+        # port = self.get_port_for_id(link.src)
+        reservations = self.get_port_reservations_for_port(in_port)
+        reservations_2 = self.get_port_reservations_for_port(out_port)
+        return reservations + reservations_2
+        # if reservations is None:
+        #     reservations = self.get_port_reservations_for_port(out_port)
+        # else:
+        #     reservations_2 = self.get_port_reservations_for_port(out_port)
+        #     if reservations_2:
+        #         return res
+        # if not reservations:
+        #     return None
+        # return reservations
+
+
     def get_switch_for_ip(self, ip):
         host = self.session.query(QoSHost) \
             .filter(QoSHost.ip == ip).first()
@@ -156,6 +181,10 @@ class DBConnection:
         port = self.session.query(QoSPort) \
             .filter(QoSPort.id == host.port).first()
         return self.get_switch_for_port(port)
+
+    def get_port_reservations_for_port(self, port):
+        return self.session.query(QoSPortReservation) \
+            .filter(QoSPortReservation.port==port.id).all()
 
     def get_ports_for_switch(self, dpid):
         return self.session.query(QoSPort) \
@@ -186,7 +215,7 @@ class DBConnection:
 
     def get_reservation_for_id(self, res_id):
         return self.session.query(QoSReservation) \
-            .filter(QoSReservation.id == id).first()
+            .filter(QoSReservation.id == res_id).first()
 
     def get_switch_for_dpid(self, dpid):
         return self.session.query(QoSSwitch).filter(QoSSwitch.dpid == dpid).first()
@@ -220,6 +249,29 @@ class DBConnection:
             if host:
                 hosts.append(host)
         return hosts
+
+    def get_link_for_ports(self, src, dst):
+        src = self.get_switch_for_port(src)
+        dst = self.get_switch_for_port(dst)
+        link = self.session.query(QoSLink).filter(QoSLink.src==src.dpid and QoSLink.dst==dst.dpid).first()
+        if not link:
+            return None
+        return link
+
+    def get_link_between_switches(self, switch_1, switch_2):
+        ports_1 = self.get_ports_for_switch(switch_1.dpid)
+        ports_2 = self.get_ports_for_switch(switch_2.dpid)
+
+        for p1 in ports_1:
+            for p2 in ports_2:
+                link = self.get_link_for_ports(p1, p2)
+                if link:
+                    return link
+                else:
+                    link = self.get_link_for_ports(p2, p1)
+                    if link:
+                        return link
+        return None
 
     def get_non_neighbouring_hosts(self, dpid):
         ports = self.get_ports_for_switch(dpid)

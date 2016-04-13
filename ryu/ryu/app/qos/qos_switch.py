@@ -24,7 +24,7 @@ from ryu.lib.packet import packet, ethernet, arp, ether_types, mpls
 from ryu.topology import event
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
-from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID, METER_TABLE_ID
+from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID, PIR_TABLE_ID, CIR_TABLE_ID
 
 
 class QoSSwitch13(app_manager.RyuApp):
@@ -56,8 +56,13 @@ class QoSSwitch13(app_manager.RyuApp):
 
         # Add a flow to forward from table_id:0 to table_id:1
         match = parser.OFPMatch()
+        inst = [parser.OFPInstructionGotoTable(CIR_TABLE_ID)]
+        req = parser.OFPFlowMod(datapath=datapath, priority=1, match=match, instructions=inst, table_id=PIR_TABLE_ID)
+        datapath.send_msg(req)
+
+        match = parser.OFPMatch()
         inst = [parser.OFPInstructionGotoTable(FLOW_TABLE_ID)]
-        req = parser.OFPFlowMod(datapath=datapath, priority=1, match=match, instructions=inst, table_id=METER_TABLE_ID)
+        req = parser.OFPFlowMod(datapath=datapath, priority=1, match=match, instructions=inst, table_id=CIR_TABLE_ID)
         datapath.send_msg(req)
 
     def add_flow(self, datapath, priority, match, actions, table_id=FLOW_TABLE_ID, buffer_id=None):
