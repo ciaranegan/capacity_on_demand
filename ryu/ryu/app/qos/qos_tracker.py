@@ -21,6 +21,14 @@ PIR_TABLE_ID = 0
 CIR_TABLE_ID = 1
 FLOW_TABLE_ID = 2
 
+PORT_NAME_STR = "s{}-eth{}"
+
+SWITCH_NUMBER_TABLE = {
+    s0_DPID: 0,
+    s1_DPID: 1,
+    s2_DPID: 2
+}
+
 # Mapping of port numbers to mac addresses
 HOST_MAP = {
     s0_DPID: {
@@ -90,6 +98,10 @@ class QoSTracker:
         self._flows_added = 0
         self.queue_table = {}
 
+    def get_port_name_for_port_no(self, port_no, dpid):
+        switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])
+        return PORT_NAME_STR.format(switch_no, port_no)
+
     def start(self):
         print "Here we go"
         self.db.delete_reservations()
@@ -97,20 +109,24 @@ class QoSTracker:
         for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
         self.queue_table = {}
+        self.init_port_queues()
 
     def init_port_queues(self):
         switches = self.db.get_all_switches()
         for switch in switches:
             ports = self.db.get_ports_for_switch(switch.dpid)
+            for p in ports:
+                print self.get_port_name_for_port_no(p.port_no, switch.dpid)
+
 
     def put_ovsdb_addr(self, dpid, ovsdb_addr):
-        switch_id = self.get_switch_no_for_dpid(dpid)
+        switch_id = self.get_switch_id_for_dpid(dpid)
         url = LOCALHOST + CONF_SWITCH_URI + switch_id + "/ovsdb_addr"
         print "URL: " + url
         r = requests.put(url, data=json.dumps(ovsdb_addr))
         print "RESPONSE: " + str(r)
 
-    def get_switch_no_for_dpid(self, dpid):
+    def get_switch_id_for_dpid(self, dpid):
         return SWITCH_LOOKUP[str(dpid)]
 
     def get_reservation_for_src_dst(self, src, dst):
