@@ -41,9 +41,8 @@ def start_network(controller_ip):
     net.topo = topo
     net.start()
     CLI(net)
-    print dumpPorts(net)
-    print dumpNodeConnections(net)
-    print dumpNetConnections(net)
+    print topo.links()
+    print topo.linkinfo()
     net.stop()
     os.system('sudo mn -c')
 
