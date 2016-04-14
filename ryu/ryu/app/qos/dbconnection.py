@@ -285,6 +285,16 @@ class DBConnection:
         self.session.commit()
         return res
 
+    def delete_reservations(self):
+        port_reservations = self.get_all_port_reservations()
+        for p in port_reservations:
+            self.session.delete(p)
+        reservations = self.get_all_reservations()
+        for r in reservations:
+            self.session.delete(r)
+
+        self.session.commit()
+
     def add_record(self, record):
         print "ADDING " + str(record) + " TO DATABASE"
         self.session.add(record)

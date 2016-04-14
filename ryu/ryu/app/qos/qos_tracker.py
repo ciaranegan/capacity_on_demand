@@ -9,9 +9,10 @@ from ryu.ofproto import ether
 from ryu.lib.ip import ipv4_to_bin
 from IPython import embed
 
-LOCALHOST = "http://0.0.0.0:8080"
-ADD_FLOW_URI = "/stats/flowentry/add"
-GET_FLOWS_URI = "/stats/flow/{}"
+# LOCALHOST = "http://0.0.0.0:8080"
+LOCALHOST = "http://localhost:8080"
+CONF_SWITCH_URI = "/v1.0/conf/switches/"
+
 s0_DPID = "16"
 s1_DPID = "32"
 s2_DPID = "48"
@@ -46,6 +47,12 @@ HOST_MAP = {
     }
 }
 
+SWITCH_LOOKUP = {
+    s0_DPID: "0000000000000010",
+    s1_DPID: "0000000000000020",
+    s2_DPID: "0000000000000030"
+}
+
 # Mapping of links to port_nos and their bandwidth
 SWITCH_MAP = {
     s0_DPID: {
@@ -72,6 +79,8 @@ SWITCH_MAP = {
     }
 }
 
+OVSDB_ADDR = "tcp:127.0.0.1:6632"
+
 class QoSTracker:
 
     def __init__(self, ryu_app):
@@ -79,6 +88,23 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
         self._flows_added = 0
+
+    def start(self):
+        print "Here we go"
+        self.db.delete_reservations()
+        switches = self.db.get_all_switches()
+        for switch in switches:
+            self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+
+    def put_ovsdb_addr(self, dpid, ovsdb_addr):
+        switch_id = self.get_switch_no_for_dpid(dpid)
+        url = LOCALHOST + CONF_SWITCH_URI + switch_id + "/ovsdb_addr"
+        print "URL: " + url
+        r = requests.put(url, data=json.dumps(ovsdb_addr))
+        print "RESPONSE: " + str(r)
+
+    def get_switch_no_for_dpid(self, dpid):
+        return SWITCH_LOOKUP[str(dpid)]
 
     def get_reservation_for_src_dst(self, src, dst):
         return self.db.get_reservation_for_src_dst(src, dst)
@@ -179,8 +205,8 @@ class QoSTracker:
         self._flows_added += 1
         self.ryu_app.add_flow(datapath, priority, match, actions, table_id, buffer_id)
 
-    def get_flows_for_switch(self, switch):
-        response = requests.get((LOCALHOST+GET_FLOWS_URI).format(str(switch.dpid)))
+    # def get_flows_for_switch(self, switch):
+    #     response = requests.get((LOCALHOST+GET_FLOWS_URI).format(str(switch.dpid)))
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
@@ -264,6 +290,14 @@ class QoSTracker:
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
 
 
+    def add_ingress_queue_rules(self, switch, in_port, src_ip, dst_ip, bw):
+        pass
+
+
+    def add_internal_node_queue_rules(self, switch, in_port, mpls_label, bw):
+        pass
+
+
     def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
         switch = self.db.get_switch_for_port(in_port)
         ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
@@ -328,11 +362,9 @@ class QoSTracker:
 
         return bw
 
-
     def get_available_bandwidth_for_path(self, path):
         # TODO: doesn't work for smaller paths
         total_bw = self.get_max_bandwidth_for_path(path)
-        # Can't just sum all the bws
         if len(path) > 2:
             prev_switch = path[0]
             avail_link_bw = []
@@ -345,7 +377,6 @@ class QoSTracker:
                     for p in port_reservations:
                         reservation = self.db.get_reservation_for_id(p.reservation)
                         reservations.append(reservation)
-                        # total_bw -= reservation.bw
                     for r in reservations:
                         link_bw -= reservation.bw
                 avail_link_bw.append(link_bw)
