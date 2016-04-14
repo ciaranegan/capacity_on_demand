@@ -88,6 +88,7 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
         self._flows_added = 0
+        self.queue_table = {}
 
     def start(self):
         print "Here we go"
@@ -95,6 +96,12 @@ class QoSTracker:
         switches = self.db.get_all_switches()
         for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+        self.queue_table = {}
+
+    def init_port_queues(self):
+        switches = self.db.get_all_switches()
+        for switch in switches:
+            ports = self.db.get_ports_for_switch(switch.dpid)
 
     def put_ovsdb_addr(self, dpid, ovsdb_addr):
         switch_id = self.get_switch_no_for_dpid(dpid)

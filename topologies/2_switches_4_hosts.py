@@ -2,7 +2,7 @@ import sys
 import os
 from mininet.topo import Topo
 from mininet.net import Mininet
-from mininet.util import irange, dumpNodeConnections
+from mininet.util import irange, dumpNodeConnections, dumpPorts, dumpNodeConnections
 from mininet.log import setLogLevel
 from mininet.cli import CLI
 from mininet.link import TCLink
@@ -41,6 +41,9 @@ def start_network(controller_ip):
     net.topo = topo
     net.start()
     CLI(net)
+    print dumpPorts(net)
+    print dumpNodeConnections(net)
+    print dumpNetConnections(net)
     net.stop()
     os.system('sudo mn -c')
 
