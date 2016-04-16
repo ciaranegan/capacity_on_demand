@@ -34,10 +34,18 @@ class Switches4HostsTopo(Topo):
 
 topos = {'2switch4host': (lambda: Switches4HostsTopo())}
 
-def start_network(controller_ip):
+LOCAL_IP = "127.0.0.1"
+
+def add_controller(controller_ip=None):
+    if not controller_ip:
+        net.addController(name="c0", controller=RemoteController, ip=LOCAL_IP, port=6633)
+    else:
+        net.addController(name="c0", controller=RemoteController, ip=controller_ip, port=6633)
+
+def start_network(controller_ip=None):
     topo = Switches4HostsTopo()
     net = Mininet(topo=None, switch=OVSKernelSwitch, link=TCLink, autoSetMacs=True)
-    net.addController(name="c0", controller=RemoteController, ip=controller_ip, port=6633)
+    add_controller(controller_ip)
     net.topo = topo
     net.start()
     CLI(net)
