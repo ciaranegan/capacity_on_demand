@@ -12,6 +12,7 @@ from IPython import embed
 # LOCALHOST = "http://0.0.0.0:8080"
 LOCALHOST = "http://localhost:8080"
 CONF_SWITCH_URI = "/v1.0/conf/switches/"
+QOS_QUEUES_URI = "/qos/queue/"
 
 s0_DPID = "16"
 s1_DPID = "32"
@@ -28,6 +29,8 @@ SWITCH_NUMBER_TABLE = {
     s1_DPID: 1,
     s2_DPID: 2
 }
+
+OVS_LINK_TYPE = "linux-htb"
 
 # Mapping of port numbers to mac addresses
 HOST_MAP = {
@@ -106,25 +109,42 @@ class QoSTracker:
         print "Here we go"
         self.db.delete_reservations()
         switches = self.db.get_all_switches()
-        for switch in switches:
+        # Can't explain why but it fails the first time so do it twice
+        # self.put_ovsdb_addr(switches[0].dpid, OVSDB_ADDR)
+        for switch in switches[1:]:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+        # for switch in switches:
+        #     self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
         self.queue_table = {}
-        self.init_port_queues()
+        # self.init_port_queues()
 
     def init_port_queues(self):
         switches = self.db.get_all_switches()
-        for switch in switches:
+        for switch in switches[1:]:
             ports = self.db.get_ports_for_switch(switch.dpid)
             for p in ports:
-                print self.get_port_name_for_port_no(p.port_no, switch.dpid)
-
+                switch_id = self.get_switch_id_for_dpid(switch.dpid)
+                url = LOCALHOST + QOS_QUEUES_URI + switch_id
+                port_name = self.get_port_name_for_port_no(p.port_no, switch.dpid)
+                print "\n**** PORT_NAME: " + str(port_name) + " PORT: " + str(p.port_no) + " SWITCH: " + str(switch.dpid) + " ID: " + str(switch_id)
+                data = {
+                    "port_name": self.get_port_name_for_port_no(p.port_no, switch.dpid),
+                    "type": OVS_LINK_TYPE,
+                    "max_rate": 1000
+                }
+                request = requests.post(url, data=json.dumps(data))
+                print str(request)
+                # print str(request.json())
+                print str(request.text)
 
     def put_ovsdb_addr(self, dpid, ovsdb_addr):
         switch_id = self.get_switch_id_for_dpid(dpid)
         url = LOCALHOST + CONF_SWITCH_URI + switch_id + "/ovsdb_addr"
-        print "URL: " + url
         r = requests.put(url, data=json.dumps(ovsdb_addr))
-        print "RESPONSE: " + str(r)
+        print "\n**** ADDING OVSDB ADDR FOR DPID: " + str(dpid)
+        print str(r)
+        # print str(r.json())
+        print str(r.text)
 
     def get_switch_id_for_dpid(self, dpid):
         return SWITCH_LOOKUP[str(dpid)]

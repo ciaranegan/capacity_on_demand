@@ -378,8 +378,10 @@ class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
-        self.dpset = data['dpset']
-        self.waiters = data['waiters']
+        # print data
+        # self.dpset = data['dpset']
+        self.dpset = dpset.DPSet
+        # self.waiters = data['waiters']
 
     @classmethod
     def set_logger(cls, logger):
@@ -596,12 +598,16 @@ class QoS(object):
             return
         self.ovsdb_addr = ovsdb_addr
         if self.ovs_bridge is None:
+            print "OVSDB_ADDR: " + str(ovsdb_addr)
             ovs_bridge = bridge.OVSBridge(self.CONF, dpid, ovsdb_addr)
             self.ovs_bridge = ovs_bridge
+            print "OVS_BRIDGE: " + str(type(ovs_bridge))
+
             try:
                 ovs_bridge.init()
+                print "FINISHED INIT OUTSIDE INIT"
             except:
-                raise ValueError('ovsdb addr is not available.')
+                raise ValueError('ovsdb addr is not available. DPID: ' + str(dpid))
 
     def _update_vlan_list(self, vlan_list):
         for vlan_id in self.vlan_list.keys():
