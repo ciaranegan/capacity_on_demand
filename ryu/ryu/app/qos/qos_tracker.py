@@ -111,7 +111,7 @@ class QoSTracker:
         switches = self.db.get_all_switches()
         # Can't explain why but it fails the first time so do it twice
         # self.put_ovsdb_addr(switches[0].dpid, OVSDB_ADDR)
-        for switch in switches[1:]:
+        for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
         # for switch in switches:
         #     self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
@@ -120,7 +120,7 @@ class QoSTracker:
 
     def init_port_queues(self):
         switches = self.db.get_all_switches()
-        for switch in switches[1:]:
+        for switch in switches:
             ports = self.db.get_ports_for_switch(switch.dpid)
             for p in ports:
                 switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -130,7 +130,7 @@ class QoSTracker:
                 data = {
                     "port_name": self.get_port_name_for_port_no(p.port_no, switch.dpid),
                     "type": OVS_LINK_TYPE,
-                    "max_rate": 1000
+                    "max_rate": 100
                 }
                 request = requests.post(url, data=json.dumps(data))
                 print str(request)
