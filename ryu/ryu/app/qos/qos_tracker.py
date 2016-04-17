@@ -128,7 +128,10 @@ class QoSTracker:
                 data = {
                     "port_name": port_name,
                     "type": OVS_LINK_TYPE,
-                    "max_rate": str(max_bw)
+                    "max_rate": str(max_bw),
+                    "queues": [{
+                        "max_rate": "800"
+                    }]
                 }
 
                 queue = self.db.add_queue(port=port, BEST_EFFORT_QUEUE_ID,
