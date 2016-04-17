@@ -36,7 +36,7 @@ topos = {'2switch4host': (lambda: Switches4HostsTopo())}
 
 LOCAL_IP = "127.0.0.1"
 
-def add_controller(controller_ip=None):
+def add_controller(net, controller_ip=None):
     if not controller_ip:
         net.addController(name="c0", controller=RemoteController, ip=LOCAL_IP, port=6633)
     else:
@@ -45,7 +45,7 @@ def add_controller(controller_ip=None):
 def start_network(controller_ip=None):
     topo = Switches4HostsTopo()
     net = Mininet(topo=None, switch=OVSKernelSwitch, link=TCLink, autoSetMacs=True)
-    add_controller(controller_ip)
+    add_controller(net, controller_ip)
     net.topo = topo
     net.start()
     CLI(net)
@@ -54,5 +54,8 @@ def start_network(controller_ip=None):
 
 if __name__ == '__main__':
     setLogLevel('info')
-    controller_ip = str(sys.argv[1])
+    if len(sys.argv) > 2:
+        controller_ip = str(sys.argv[1])
+    else:
+        controller_ip = None
     start_network(controller_ip)
