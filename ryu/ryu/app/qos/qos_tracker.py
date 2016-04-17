@@ -13,6 +13,7 @@ from IPython import embed
 LOCALHOST = "http://localhost:8080"
 CONF_SWITCH_URI = "/v1.0/conf/switches/"
 QOS_QUEUES_URI = "/qos/queue/"
+QOS_RULES_URI = "/qos/rules/"
 
 s0_DPID = "16"
 s1_DPID = "32"
@@ -323,6 +324,8 @@ class QoSTracker:
             queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
             self.add_port_queue(in_switch, in_port, queues)
 
+
+
             # Add flow to port on the way out.
 
             for i in range(1, len(path) - 1):
@@ -346,13 +349,26 @@ class QoSTracker:
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
 
 
+    def add_queue_flow(self, switch, port, drc, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
+        switch_id = self.get_switch_id_for_dpid(switch.dpid)
+        data = {
+            "match": {
+                "nw_dst": dst
+            },
+            "actions": {
+                "queue": str(queue_id)
+            }
+        }
+
+        url = LOCALHOST + QOS_RULES_URI + switch_id
+        request = requests.post(url, data=json.dumps(data))
+        print str(request.text)
+
     def add_ingress_queue_rules(self, switch, in_port, src_ip, dst_ip, bw):
         pass
 
-
     def add_internal_node_queue_rules(self, switch, in_port, mpls_label, bw):
         pass
-
 
     def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
         switch = self.db.get_switch_for_port(in_port)
