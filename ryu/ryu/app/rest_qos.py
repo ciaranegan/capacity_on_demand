@@ -381,7 +381,7 @@ class QoSController(ControllerBase):
         # print data
         # self.dpset = data['dpset']
         self.dpset = dpset.DPSet
-        # self.waiters = data['waiters']
+        self.waiters = data['waiters']
 
     @classmethod
     def set_logger(cls, logger):
