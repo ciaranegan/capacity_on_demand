@@ -36,7 +36,6 @@ class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
-        print "INIT DATA: " + str(data)
         self.simple_switch_app = data[simple_switch_instance_name]
 
 
