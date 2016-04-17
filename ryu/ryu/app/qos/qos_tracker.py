@@ -116,7 +116,7 @@ class QoSTracker:
         # for switch in switches:
         #     self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
         self.queue_table = {}
-        # self.init_port_queues()
+        self.init_port_queues()
 
     def init_port_queues(self):
         switches = self.db.get_all_switches()
