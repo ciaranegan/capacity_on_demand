@@ -64,28 +64,31 @@ SWITCH_LOOKUP = {
     s2_DPID: "0000000000000030"
 }
 
+BEST_EFFORT_QUEUE_ID = 0
+HIGH_PRIORITY_QUEUE_ID = 1
+
 # Mapping of links to port_nos and their bandwidth
 SWITCH_MAP = {
     s0_DPID: {
         3: {
             "dpid": s2_DPID,
-            "bw": 50
+            "bw": 500000
         }
     },
     s1_DPID: {
         3: {
             "dpid": s2_DPID,
-            "bw": 50
+            "bw": 500000
         }
     },
     s2_DPID: {
         1: {
             "dpid": s0_DPID,
-            "bw": 50
+            "bw": 500000
         },
         2: {
             "dpid": s1_DPID,
-            "bw": 50
+            "bw": 500000
         }
     }
 }
@@ -99,7 +102,6 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
         self._flows_added = 0
-        self.queue_table = {}
 
     def get_port_name_for_port_no(self, port_no, dpid):
         switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])
@@ -107,29 +109,42 @@ class QoSTracker:
 
     def start(self):
         self.db.delete_reservations()
+        self.db.delete_queues()
         switches = self.db.get_all_switches()
         for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
-        self.queue_table = {}
         self.init_port_queues()
 
     def init_port_queues(self):
         switches = self.db.get_all_switches()
+        max_bw = self.get_max_bw_for_topo()
         for switch in switches:
-            ports = self.db.get_ports_for_switch(switch.dpid)
-            for p in ports:
+            hosts = self.db.get_hosts_for_switch(switch.dpid)
+            for host in hosts:
+                port = self.db.get_port_for_id(host.port)
                 switch_id = self.get_switch_id_for_dpid(switch.dpid)
-                url = LOCALHOST + QOS_QUEUES_URI + switch_id
-                port_name = self.get_port_name_for_port_no(p.port_no, switch.dpid)
-                print "\n**** PORT_NAME: " + str(port_name) + " PORT: " + str(p.port_no) + " SWITCH: " + str(switch.dpid) + " ID: " + str(switch_id)
+                port_name = self.get_port_name_for_port_no(port.port_no, switch.dpid)
+
                 data = {
-                    "port_name": self.get_port_name_for_port_no(p.port_no, switch.dpid),
+                    "port_name": port_name,
                     "type": OVS_LINK_TYPE,
-                    "max_rate": "100"
+                    "max_rate": str(max_bw)
                 }
+
+                queue = self.db.add_queue(port=port, BEST_EFFORT_QUEUE_ID,
+                    max_rate=max_rate)
+
+                url = LOCALHOST + QOS_QUEUES_URI + switch_id
                 request = requests.post(url, data=json.dumps(data))
                 print str(request.text)
 
+
+    def get_max_bw_for_topo(self):
+        links = self.db.get_all_links()
+        max_bw = 0
+        for l in link:
+            max_bw = max(max_bw, link.bw)
+        return max_bw
 
     def put_ovsdb_addr(self, dpid, ovsdb_addr):
         switch_id = self.get_switch_id_for_dpid(dpid)

@@ -14,6 +14,20 @@ class DBConnection:
         Base.metadata.create_all(self.engine)
         self.session = Session()
 
+    def add_queue(self, port, queue_id, max_rate=None, min_rate=None):
+        exist = self.session.query(exists()
+                    .where(QoSQueue.port==port.id)).scalar()
+        if not exist:
+            queue = QoSQueue(port=port.id, max_rate=max_rate, min_rate=min_rate,
+                queue_id=queue_id)
+            return self.add_record(queue)
+        else:
+            return self.session.query(QoSQueue) \
+                .filter(QoSQueue.port==port.id).first()
+
+    def get_all_queues(self):
+        return self.session.query(QoSQueue).all()
+
     def add_link(self, link_data):
         exist = self.session.query(exists()
                     .where(QoSLink.src == link_data["src_port"])
@@ -292,7 +306,12 @@ class DBConnection:
         reservations = self.get_all_reservations()
         for r in reservations:
             self.session.delete(r)
+        self.session.commit()
 
+    def delete_queues(self):
+        queues = self.get_all_queues()
+        for q in queues:
+            self.session.delete(q)
         self.session.commit()
 
     def add_record(self, record):

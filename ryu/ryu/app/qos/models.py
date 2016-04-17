@@ -48,17 +48,23 @@ class QoSReservation(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     src = Column(String)
     dst = Column(String)
-    bw = Column(Float)
+    bw = Column(Integer)
     mpls_label = Column(Integer)
     in_port = Column(Integer, ForeignKey("port.id"))
     out_port = Column(Integer, ForeignKey("port.id"))
 
 
-# class QoSFlow(Base):
-#     __tablename__ = "flow"
+class QoSQueue(Base):
+    """
+    Class to represent a qos port queue.
+    """
+    __tablename__ = "queue"
 
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     reservation = Column(Integer, ForeignKey("reservation.id"))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    port = Column(Integer, ForeignKey('port.id'))
+    queue_id = Column(Integer)
+    max_rate = Column(Integer, nullable=True)
+    min_rate = Column(Integer, nullable=True)
 
 
 class QoSPortReservation(Base):
