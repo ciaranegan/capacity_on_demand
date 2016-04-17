@@ -134,8 +134,8 @@ class QoSTracker:
                     }]
                 }
 
-                queue = self.db.add_queue(port=port, BEST_EFFORT_QUEUE_ID,
-                    max_rate=max_rate)
+                queue = self.db.add_queue(port, BEST_EFFORT_QUEUE_ID,
+                    max_rate=max_bw)
 
                 url = LOCALHOST + QOS_QUEUES_URI + switch_id
                 request = requests.post(url, data=json.dumps(data))
@@ -145,8 +145,8 @@ class QoSTracker:
     def get_max_bw_for_topo(self):
         links = self.db.get_all_links()
         max_bw = 0
-        for l in link:
-            max_bw = max(max_bw, link.bw)
+        for link in links:
+            max_bw = max(max_bw, link.bandwidth)
         return max_bw
 
     def put_ovsdb_addr(self, dpid, ovsdb_addr):
