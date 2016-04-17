@@ -125,7 +125,7 @@ class QoSTracker:
                 data = {
                     "port_name": self.get_port_name_for_port_no(p.port_no, switch.dpid),
                     "type": OVS_LINK_TYPE,
-                    "max_rate": 100
+                    "max_rate": "100"
                 }
                 request = requests.post(url, data=json.dumps(data))
                 print str(request.text)
