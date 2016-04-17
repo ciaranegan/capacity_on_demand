@@ -113,34 +113,33 @@ class QoSTracker:
         switches = self.db.get_all_switches()
         for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
-        self.init_port_queues()
 
-    def init_port_queues(self):
-        switches = self.db.get_all_switches()
-        max_bw = self.get_max_bw_for_topo()
-        for switch in switches:
-            hosts = self.db.get_hosts_for_switch(switch.dpid)
-            for host in hosts:
-                port = self.db.get_port_for_id(host.port)
-                switch_id = self.get_switch_id_for_dpid(switch.dpid)
-                port_name = self.get_port_name_for_port_no(port.port_no, switch.dpid)
+    def add_port_queue(self, switch, port, queues):
+        switch_id = self.get_switch_id_for_dpid(switch.dpid)
+        port_name = self.get_port_name_for_port_no(port.port_no, switch.dpid)
 
-                data = {
-                    "port_name": port_name,
-                    "type": OVS_LINK_TYPE,
-                    "max_rate": str(max_bw),
-                    "queues": [{
-                        "max_rate": "800"
-                    }]
-                }
+        for queue in queues:
+            if "max_rate" in queue:
+                max_rate = queue["max_rate"]
+            else:
+                max_rate = None
+            if "min_rate" in queue:
+                min_rate = queue["min_rate"]
+            else:
+                min_rate = None
+            queue = self.db.add_queue(port, HIGH_PRIORITY_QUEUE_ID,
+                max_rate=max_rate, min_rate=min_rate)
 
-                queue = self.db.add_queue(port, BEST_EFFORT_QUEUE_ID,
-                    max_rate=max_bw)
+            data = {
+                "port_name": port_name,
+                "type": OVS_LINK_TYPE,
+                "max_rate": str(max_rate),
+                "queues": queues
+            }
 
-                url = LOCALHOST + QOS_QUEUES_URI + switch_id
-                request = requests.post(url, data=json.dumps(data))
-                print str(request.text)
-
+            url = LOCALHOST + QOS_QUEUES_URI + switch_id
+            request = requests.post(url, data=json.dumps(data))
+            print str(request.text)
 
     def get_max_bw_for_topo(self):
         links = self.db.get_all_links()
@@ -319,6 +318,12 @@ class QoSTracker:
             out_switch_in_port = self.db.get_port_for_port_no(out_switch_in_port_no, out_switch.dpid)
             self.add_egress_mpls_rule(out_switch_in_port, out_port.port_no,
                 reservation.mpls_label)
+
+            max_bw = self.get_max_bw_for_topo()
+            queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
+            self.add_port_queue(in_switch, in_port, queues)
+
+            # Add flow to port on the way out.
 
             for i in range(1, len(path) - 1):
                 # TODO: change this to include all switches
