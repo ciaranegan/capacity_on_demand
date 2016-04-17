@@ -106,7 +106,7 @@ class QoSTracker:
         return PORT_NAME_STR.format(switch_no, port_no)
 
     def start(self):
-        print "Here we go"
+        # print "Here we go"
         self.db.delete_reservations()
         switches = self.db.get_all_switches()
         # Can't explain why but it fails the first time so do it twice
@@ -126,25 +126,21 @@ class QoSTracker:
                 switch_id = self.get_switch_id_for_dpid(switch.dpid)
                 url = LOCALHOST + QOS_QUEUES_URI + switch_id
                 port_name = self.get_port_name_for_port_no(p.port_no, switch.dpid)
-                print "\n**** PORT_NAME: " + str(port_name) + " PORT: " + str(p.port_no) + " SWITCH: " + str(switch.dpid) + " ID: " + str(switch_id)
+                # print "\n**** PORT_NAME: " + str(port_name) + " PORT: " + str(p.port_no) + " SWITCH: " + str(switch.dpid) + " ID: " + str(switch_id)
                 data = {
                     "port_name": self.get_port_name_for_port_no(p.port_no, switch.dpid),
                     "type": OVS_LINK_TYPE,
                     "max_rate": 100
                 }
                 request = requests.post(url, data=json.dumps(data))
-                print str(request)
-                # print str(request.json())
-                print str(request.text)
+                # print str(request)
+                # # print str(request.json())
+                # print str(request.text)
 
     def put_ovsdb_addr(self, dpid, ovsdb_addr):
         switch_id = self.get_switch_id_for_dpid(dpid)
         url = LOCALHOST + CONF_SWITCH_URI + switch_id + "/ovsdb_addr"
         r = requests.put(url, data=json.dumps(ovsdb_addr))
-        print "\n**** ADDING OVSDB ADDR FOR DPID: " + str(dpid)
-        print str(r)
-        # print str(r.json())
-        print str(r.text)
 
     def get_switch_id_for_dpid(self, dpid):
         return SWITCH_LOOKUP[str(dpid)]

@@ -94,16 +94,12 @@ class OVSBridge(object):
     def __init__(self, CONF, datapath_id, ovsdb_addr, timeout=None,
                  exception=None):
         super(OVSBridge, self).__init__()
-        print "Inside init"
         self.datapath_id = datapath_id
-        print "datapath_id: " + str(datapath_id)
         self.vsctl = ovs_vsctl.VSCtl(ovsdb_addr)
-        print "After setting OVSDB ADDR"
         self.timeout = timeout or CONF.ovsdb_timeout
         self.exception = exception
 
         self.br_name = None
-        print "FINISHED INIT"
 
     def run_command(self, commands):
         self.vsctl.run_command(commands, self.timeout, self.exception)

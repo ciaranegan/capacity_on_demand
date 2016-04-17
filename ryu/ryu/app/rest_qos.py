@@ -598,14 +598,10 @@ class QoS(object):
             return
         self.ovsdb_addr = ovsdb_addr
         if self.ovs_bridge is None:
-            print "OVSDB_ADDR: " + str(ovsdb_addr)
             ovs_bridge = bridge.OVSBridge(self.CONF, dpid, ovsdb_addr)
             self.ovs_bridge = ovs_bridge
-            print "OVS_BRIDGE: " + str(type(ovs_bridge))
-
             try:
                 ovs_bridge.init()
-                print "FINISHED INIT OUTSIDE INIT"
             except:
                 raise ValueError('ovsdb addr is not available. DPID: ' + str(dpid))
 
