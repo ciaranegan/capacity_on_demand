@@ -36,7 +36,11 @@ class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
-        self.simple_switch_app = data[simple_switch_instance_name]
+        print "DATA: " + str(data)
+        print "DPSET: " + str(data['dpset'])
+        #self.simple_switch_app = data[simple_switch_instance_name]
+        print "DATAPATH: " + str(data['dpset'].dps[16])
+        self.simple_switch_app = data['dpset'].dps[16]        
 
 
     @route("start_qos", start_qos_url, methods=["POST"])

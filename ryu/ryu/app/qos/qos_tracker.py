@@ -139,6 +139,7 @@ class QoSTracker:
             }
 
             url = LOCALHOST + QOS_QUEUES_URI + switch_id
+            print "URL: " + str(url) 
             request = requests.post(url, data=json.dumps(data))
             print str(request.text)
 

@@ -380,7 +380,7 @@ class QoSController(ControllerBase):
         super(QoSController, self).__init__(req, link, data, **config)
         # print data
         self.dpset = data['dpset']
-        # self.dpset = dpset.DPSet
+        #self.dpset = dpset.DPSet
         self.waiters = data['waiters']
 
     @classmethod
