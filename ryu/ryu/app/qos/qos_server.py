@@ -15,6 +15,8 @@ simple_switch_instance_name = "simple_switch_api_app"
 add_reservation_url = "/add_reservation"
 start_qos_url = "/start_qos"
 
+QOS_OBJECT = None
+
 class QoSSwitchRest13(qos_switch.QoSSwitch13):
 
     _CONTEXTS = { "wsgi": WSGIApplication }
@@ -30,6 +32,7 @@ class QoSSwitchRest13(qos_switch.QoSSwitch13):
         super(QoSSwitchRest13, self).switch_features_handler(ev)
         datapath = ev.msg.datapath
         self.switches[datapath.id] = datapath
+        QOS_OBJECT = self.qos
         self.mac_to_port.setdefault(datapath.id, {})
 
 class QoSController(ControllerBase):
@@ -46,19 +49,19 @@ class QoSController(ControllerBase):
     @route("start_qos", start_qos_url, methods=["POST"])
     def start_qos(self, req, **kwargs):
         simple_switch = self.simple_switch_app
-        simple_switch.qos.start()
+        QOS_OBJECT.start()
 
 
     @route("add_reservation", add_reservation_url, methods=["POST"])
     def list_mac_table(self, req, **kwargs):
         data = req.json
-        simple_switch = self.simple_switch_app
+        # simple_switch = self.simple_switch_app
         request_data = {
             "src": data["src"],
             "dst": data["dst"],
             "bw": data["bw"]
         }
 
-        simple_switch.qos.add_reservation(request_data)
+        QOS_OBJECT.add_reservation(request_data)
         body = json.dumps({"mac_table": "hi"})
         return Response(content_type="application/json", body=body)
