@@ -79,6 +79,8 @@ class QoSSwitch13(app_manager.RyuApp):
         req = parser.OFPFlowMod(datapath=datapath, priority=1, match=match, instructions=inst, table_id=CIR_TABLE_ID)
         datapath.send_msg(req)
 
+        self.switches[datapath.id] = datapath
+
     def add_flow(self, datapath, priority, match, actions, table_id=FLOW_TABLE_ID, buffer_id=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
