@@ -33,10 +33,10 @@ class QoSSwitchRest13(qos_switch.QoSSwitch13):
         self.switches[datapath.id] = datapath
         self.mac_to_port.setdefault(datapath.id, {})
 
-class QoSController(ControllerBase):
+class QoSServer(ControllerBase):
 
     def __init__(self, req, link, data, **config):
-        super(QoSController, self).__init__(req, link, data, **config)
+        super(QoSServer, self).__init__(req, link, data, **config)
         self.simple_switch_app = data[simple_switch_instance_name]
 
 
