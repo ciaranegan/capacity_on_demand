@@ -43,6 +43,11 @@ from ryu.ofproto import ether
 from ryu.ofproto import inet
 
 
+simple_switch_instance_name = "simple_switch_api_app"
+
+add_reservation_url = "/add_reservation"
+start_qos_url = "/start_qos"
+
 # =============================
 #          REST API
 # =============================
@@ -382,6 +387,26 @@ class QoSController(ControllerBase):
         self.dpset = data['dpset']
         #self.dpset = dpset.DPSet
         self.waiters = data['waiters']
+
+    @route("start_qos", start_qos_url, methods=["POST"])
+    def start_qos(self, req, **kwargs):
+        simple_switch = self.simple_switch_app
+        simple_switch.qos.start()
+
+
+    @route("add_reservation", add_reservation_url, methods=["POST"])
+    def list_mac_table(self, req, **kwargs):
+        data = req.json
+        simple_switch = self.simple_switch_app
+        request_data = {
+            "src": data["src"],
+            "dst": data["dst"],
+            "bw": data["bw"]
+        }
+
+        simple_switch.qos.add_reservation(request_data)
+        body = json.dumps({"mac_table": "hi"})
+        return Response(content_type="application/json", body=body)
 
     @classmethod
     def set_logger(cls, logger):

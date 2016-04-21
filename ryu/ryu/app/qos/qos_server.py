@@ -23,6 +23,7 @@ class QoSSwitchRest13(qos_switch.QoSSwitch13):
     def __init__(self, *args, **kwargs):
         super(QoSSwitchRest13, self).__init__(*args, **kwargs)
         self.switches = {}
+        print "SELF_QOS: " + str(self.qos)
         wsgi = kwargs["wsgi"]
         wsgi.register(QoSController, {simple_switch_instance_name : self})
 
@@ -31,12 +32,13 @@ class QoSSwitchRest13(qos_switch.QoSSwitch13):
         super(QoSSwitchRest13, self).switch_features_handler(ev)
         datapath = ev.msg.datapath
         self.switches[datapath.id] = datapath
+        QOS_OBJECT = self.qos
         self.mac_to_port.setdefault(datapath.id, {})
 
-class QoSServer(ControllerBase):
+class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
-        super(QoSServer, self).__init__(req, link, data, **config)
+        super(QoSController, self).__init__(req, link, data, **config)
         self.simple_switch_app = data[simple_switch_instance_name]
 
 
