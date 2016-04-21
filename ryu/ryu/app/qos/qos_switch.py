@@ -29,6 +29,7 @@ from ryu.topology import event
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
 from ryu.app.qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID, PIR_TABLE_ID, CIR_TABLE_ID
+from ryu.app.rest_qos import QoSController
 
 simple_switch_instance_name = "simple_switch_api_app"
 
