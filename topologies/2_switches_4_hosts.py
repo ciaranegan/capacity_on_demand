@@ -54,7 +54,7 @@ def start_network(controller_ip=None):
 
 if __name__ == '__main__':
     setLogLevel('info')
-    if len(sys.argv) > 2:
+    if len(sys.argv) > 1:
         controller_ip = str(sys.argv[1])
     else:
         controller_ip = None
