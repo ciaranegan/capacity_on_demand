@@ -31,7 +31,6 @@ class QoSSwitchRest13(qos_switch.QoSSwitch13):
         super(QoSSwitchRest13, self).switch_features_handler(ev)
         datapath = ev.msg.datapath
         self.switches[datapath.id] = datapath
-        QOS_OBJECT = self.qos
         self.mac_to_port.setdefault(datapath.id, {})
 
 class QoSController(ControllerBase):
