@@ -168,30 +168,30 @@ class QoSSwitch13(app_manager.RyuApp):
         print "***** ERROR - TYPE:" + str(msg.type) + " CODE:" + str(msg.code) + " COUNT:" + str(self._error_count)
 
 
-class QoSController(ControllerBase):
+# class QoSController(ControllerBase):
 
-    def __init__(self, req, link, data, **config):
-        super(QoSController, self).__init__(req, link, data, **config)
-        self.simple_switch_app = data[simple_switch_instance_name]
-
-
-    @route("start_qos", start_qos_url, methods=["POST"])
-    def start_qos(self, req, **kwargs):
-        simple_switch = self.simple_switch_app
-        simple_switch.qos.start()
+#     def __init__(self, req, link, data, **config):
+#         super(QoSController, self).__init__(req, link, data, **config)
+#         self.simple_switch_app = data[simple_switch_instance_name]
 
 
-    @route("add_reservation", add_reservation_url, methods=["POST"])
-    def list_mac_table(self, req, **kwargs):
-        data = req.json
-        simple_switch = self.simple_switch_app
-        request_data = {
-            "src": data["src"],
-            "dst": data["dst"],
-            "bw": data["bw"]
-        }
+#     @route("start_qos", start_qos_url, methods=["POST"])
+#     def start_qos(self, req, **kwargs):
+#         simple_switch = self.simple_switch_app
+#         simple_switch.qos.start()
 
-        simple_switch.qos.add_reservation(request_data)
-        body = json.dumps({"mac_table": "hi"})
-        return Response(content_type="application/json", body=body)
+
+#     @route("add_reservation", add_reservation_url, methods=["POST"])
+#     def list_mac_table(self, req, **kwargs):
+#         data = req.json
+#         simple_switch = self.simple_switch_app
+#         request_data = {
+#             "src": data["src"],
+#             "dst": data["dst"],
+#             "bw": data["bw"]
+#         }
+
+#         simple_switch.qos.add_reservation(request_data)
+#         body = json.dumps({"mac_table": "hi"})
+#         return Response(content_type="application/json", body=body)
 
