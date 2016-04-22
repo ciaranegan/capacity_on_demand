@@ -384,9 +384,9 @@ class QoSController(ControllerBase):
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
         # print data
-        # self.dpset = data['dpset']
-        self.dpset = dpset.DPSet
-        # self.waiters = data['waiters']
+        self.dpset = data['dpset']
+        #self.dpset = dpset.DPSet
+        self.waiters = data['waiters']
 
     @route("start_qos", start_qos_url, methods=["POST"])
     def start_qos(self, req, **kwargs):
