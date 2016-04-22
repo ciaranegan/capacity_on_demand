@@ -1,6 +1,8 @@
 import requests
 import json
 import struct
+import time
+import threading
 
 from ryu.app.qos.models import *
 from ryu.app.qos.dbconnection import DBConnection
@@ -103,10 +105,16 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
         self._flows_added = 0
+        t = threading.Thread(target=delayed_start)
+        t.start()
 
     def get_port_name_for_port_no(self, port_no, dpid):
         switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])
         return PORT_NAME_STR.format(switch_no, port_no)
+
+    def delayed_start(self):
+        time.sleep(3)
+        self.start()
 
     def start(self):
         self.db.delete_reservations()
