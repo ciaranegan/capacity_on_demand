@@ -5,7 +5,6 @@
 # You may obtain a copy of the License at
 #
 # http://www.apache.org/licenses/LICENSE-2.0
-#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
@@ -383,9 +382,7 @@ class QoSController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
         super(QoSController, self).__init__(req, link, data, **config)
-        # print data
         self.dpset = data['dpset']
-        #self.dpset = dpset.DPSet
         self.waiters = data['waiters']
 
     @route("start_qos", start_qos_url, methods=["POST"])

@@ -105,7 +105,7 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
         self._flows_added = 0
-        t = threading.Thread(target=delayed_start)
+        t = threading.Thread(target=self.delayed_start)
         t.start()
 
     def get_port_name_for_port_no(self, port_no, dpid):
@@ -113,7 +113,7 @@ class QoSTracker:
         return PORT_NAME_STR.format(switch_no, port_no)
 
     def delayed_start(self):
-        time.sleep(3)
+        time.sleep(5)
         self.start()
 
     def start(self):
