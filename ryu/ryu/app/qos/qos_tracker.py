@@ -271,7 +271,7 @@ class QoSTracker:
     def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
         self.ryu_app.add_flow(datapath, priority, match, actions, table_id, buffer_id)
-        if self._flows_added > 165:
+        if self._flows_added > 167:
             print "Add flow: dpid-" + str(datapath.id) + " match-" + str(match) + " actions-" + str(actions) + " count:" + str(self._flows_added)
     # def get_flows_for_switch(self, switch):
     #     response = requests.get((LOCALHOST+GET_FLOWS_URI).format(str(switch.dpid)))
@@ -372,7 +372,8 @@ class QoSTracker:
         data = {
             "match": {
                 "nw_dst": dst,
-                "nw_src": src
+                "nw_src": src,
+                "dl_type": ether.ETH_TYPE_IP
             },
             "actions": {
                 "queue": str(queue_id)
