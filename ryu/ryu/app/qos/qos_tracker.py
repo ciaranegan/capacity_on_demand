@@ -126,7 +126,7 @@ class QoSTracker:
         reservation = {
             "src": "10.0.0.4",
             "dst": "10.0.0.1",
-            "bw": 4500
+            "bw": 49999
         }
         self.add_reservation(reservation)
 
@@ -340,6 +340,7 @@ class QoSTracker:
             queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
             self.add_port_queue(in_switch, in_port, queues)
 
+            self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
 
 
             # Add flow to port on the way out.
@@ -365,7 +366,7 @@ class QoSTracker:
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
 
 
-    def add_queue_flow(self, switch, port, drc, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
+    def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
         data = {
             "match": {
