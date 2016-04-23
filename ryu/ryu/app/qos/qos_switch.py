@@ -88,6 +88,7 @@ class QoSSwitch13(app_manager.RyuApp):
 
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
+        print "About to add flow: dpid:" + str(datapath.id) + " match:" + str(match) + " actions:" + str(actions)
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
                                     priority=priority, match=match,
@@ -172,6 +173,7 @@ class QoSSwitch13(app_manager.RyuApp):
             # verify if we have a valid buffer_id, if yes avoid to send both
             # flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
+                print "About to add flow: dpid:" + str(datapath.id) + " match:" + str(match) + " actions:" + str(actions)
                 self.add_flow(datapath, 1, match, actions, msg.buffer_id)
                 return
             else:
