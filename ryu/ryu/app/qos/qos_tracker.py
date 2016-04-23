@@ -271,7 +271,7 @@ class QoSTracker:
     def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
         self.ryu_app.add_flow(datapath, priority, match, actions, table_id, buffer_id)
-
+        print "Add flow: dpid-" + str(datapath) + " match-" + str(match) + " count:" + str(self._flows_added)
     # def get_flows_for_switch(self, switch):
     #     response = requests.get((LOCALHOST+GET_FLOWS_URI).format(str(switch.dpid)))
 
