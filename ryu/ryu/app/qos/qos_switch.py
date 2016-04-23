@@ -165,7 +165,7 @@ class QoSSwitch13(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
         self._error_count+=1
-        print "***** ERROR - TYPE:" + str(msg.type) + " CODE:" + str(msg.code) + " COUNT:" + str(self._error_count)
+        print "***** ERROR - TYPE:" + str(msg.type) + " CODE:" + str(msg.code) + "DPID:" + str(datapath.id) + " COUNT:" + str(self._error_count)
 
 
 # class QoSController(ControllerBase):

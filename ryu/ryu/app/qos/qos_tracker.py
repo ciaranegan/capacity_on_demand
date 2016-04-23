@@ -372,11 +372,11 @@ class QoSTracker:
         data = {
             "match": {
                 "nw_dst": dst,
-                "nw_src": src,
-                "dl_type": ether.ETH_TYPE_IP
+                "nw_src": src
+            #    "dl_type": ether.ETH_TYPE_IP
             },
             "actions": {
-                "queue": str(queue_id)
+                "queue": queue_id
             }
         }
 
