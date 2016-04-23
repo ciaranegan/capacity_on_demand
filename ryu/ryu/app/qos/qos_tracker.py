@@ -113,7 +113,7 @@ class QoSTracker:
         return PORT_NAME_STR.format(switch_no, port_no)
 
     def delayed_start(self):
-        time.sleep(3)
+        time.sleep(5)
         self.start()
 
     def start(self):
