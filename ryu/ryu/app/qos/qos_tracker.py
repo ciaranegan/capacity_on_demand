@@ -369,19 +369,26 @@ class QoSTracker:
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
+        # data = {
+        #     "match": {
+        #         "nw_dst": dst,
+        #         "nw_src": src
+        #     },
+        #     "actions": {
+        #         "queue": queue_id
+        #     }
+        # }
         data = {
             "match": {
                 "nw_dst": dst,
-                "nw_src": src
-            #    "dl_type": ether.ETH_TYPE_IP
+                "nw_src": src,
+                "nw_proto": "UDP",
             },
             "actions": {
                 "queue": queue_id
             }
         }
-
         url = LOCALHOST + QOS_RULES_URI + switch_id
-        print url
         request = requests.post(url, data=json.dumps(data))
         print str(request.text)
 
