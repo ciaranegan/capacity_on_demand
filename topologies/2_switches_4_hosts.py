@@ -22,15 +22,16 @@ class Switches4HostsTopo(Topo):
         switch1 = self.addSwitch('s1', dpid='0000000000000020')
         switch2 = self.addSwitch('s2', dpid='0000000000000030')
 
+        # 100 Mbps
         self.addLink(host0, switch0, bw=100) # s0.port_1: host0
         self.addLink(host1, switch0, bw=100) # s0.port_2: host1
 
         self.addLink(host2, switch1, bw=100) # s1.port_1: host0
         self.addLink(host3, switch1, bw=100) # s1.port_1: host0
 
-        # 50 Mbps bandwidth
-        self.addLink(switch0, switch2, bw=50) # s0.port_3: s2.port_1
-        self.addLink(switch1, switch2, bw=50) # s1.port_3: s2.port_2
+        # 1 Mbps bandwidth
+        self.addLink(switch0, switch2, bw=1) # s0.port_3: s2.port_1
+        self.addLink(switch1, switch2, bw=1) # s1.port_3: s2.port_2
 
 topos = {'2switch4host': (lambda: Switches4HostsTopo())}
 
