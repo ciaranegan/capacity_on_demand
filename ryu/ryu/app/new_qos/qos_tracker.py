@@ -370,7 +370,7 @@ class QoSTracker:
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
             self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
-            self.add_port_queue(path[i], in_port, queues)
+            self.add_port_queue(path[-1], in_port, queues)
 
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
