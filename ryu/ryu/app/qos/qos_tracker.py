@@ -75,23 +75,23 @@ SWITCH_MAP = {
     s0_DPID: {
         3: {
             "dpid": s2_DPID,
-            "bw": 500000
+            "bw": 1000
         }
     },
     s1_DPID: {
         3: {
             "dpid": s2_DPID,
-            "bw": 500000
+            "bw": 1000
         }
     },
     s2_DPID: {
         1: {
             "dpid": s0_DPID,
-            "bw": 500000
+            "bw": 1000
         },
         2: {
             "dpid": s1_DPID,
-            "bw": 500000
+            "bw": 1000
         }
     }
 }
@@ -106,7 +106,7 @@ class QoSTracker:
         self._current_mpls_label = 0
         self._flows_added = 0
         t = threading.Thread(target=self.delayed_start)
-        t.start()
+        #t.start()
 
     def get_port_name_for_port_no(self, port_no, dpid):
         switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])
@@ -126,7 +126,7 @@ class QoSTracker:
         reservation = {
             "src": "10.0.0.4",
             "dst": "10.0.0.1",
-            "bw": 49999
+            "bw": 500 
         }
         self.add_reservation(reservation)
 
@@ -265,8 +265,8 @@ class QoSTracker:
             s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
 
         switches = self.db.get_all_switches()
-        for switch in switches:
-            self.init_flows(switch, SWITCH_MAP)
+        #for switch in switches:
+        #    self.init_flows(switch, SWITCH_MAP)
 
     def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
@@ -341,7 +341,7 @@ class QoSTracker:
             queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
             self.add_port_queue(in_switch, in_port, queues)
 
-            self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
+            #self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
 
 
             # Add flow to port on the way out.
