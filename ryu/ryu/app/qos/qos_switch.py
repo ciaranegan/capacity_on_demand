@@ -72,12 +72,12 @@ class QoSSwitch13(app_manager.RyuApp):
         # Add a flow to forward from table_id:0 to table_id:1
         match = parser.OFPMatch()
         inst = [parser.OFPInstructionGotoTable(CIR_TABLE_ID)]
-        req = parser.OFPFlowMod(datapath=datapath, priority=1, match=match, instructions=inst, table_id=PIR_TABLE_ID)
+        req = parser.OFPFlowMod(datapath=datapath, priority=2, match=match, instructions=inst, table_id=PIR_TABLE_ID)
         datapath.send_msg(req)
 
         match = parser.OFPMatch()
         inst = [parser.OFPInstructionGotoTable(FLOW_TABLE_ID)]
-        req = parser.OFPFlowMod(datapath=datapath, priority=1, match=match, instructions=inst, table_id=CIR_TABLE_ID)
+        req = parser.OFPFlowMod(datapath=datapath, priority=2, match=match, instructions=inst, table_id=CIR_TABLE_ID)
         datapath.send_msg(req)
 
         self.switches[datapath.id] = datapath

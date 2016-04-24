@@ -120,8 +120,8 @@ class QoSTracker:
         self.db.delete_reservations()
         self.db.delete_queues()
         switches = self.db.get_all_switches()
-        for switch in switches:
-            self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+        # for switch in switches:
+        #     self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
 
         reservation = {
             "src": "10.0.0.4",
@@ -269,6 +269,7 @@ class QoSTracker:
 
     def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
+        print "ADDING FLOW FOR: dpid=" + str(datapath.id) + " actions=" + str(actions) + " match=" + str(match)
         self.ryu_app.add_flow(datapath, priority, match, actions, buffer_id)
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
@@ -327,12 +328,14 @@ class QoSTracker:
 
             out_switch_in_port_no = self.db.get_in_port_no_between_switches(path[len(path) - 2], out_switch, SWITCH_MAP)
             out_switch_in_port = self.db.get_port_for_port_no(out_switch_in_port_no, out_switch.dpid)
-            self.add_egress_mpls_rule(out_switch_in_port, out_port.port_no,
-                reservation.mpls_label)
+
+            last_port = self.db.get_port_for_id(out_port_reservation.port)
+            self.add_egress_mpls_rule(out_switch, last_port.port_no,
+                reservation.mpls_label, reservation.src, reservation.dst)
 
             max_bw = self.get_max_bw_for_topo()
-            queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
-            self.add_port_queue(in_switch, in_port, queues)
+            # queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
+            # self.add_port_queue(in_switch, in_port, queues)
 
             self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
             
@@ -350,35 +353,30 @@ class QoSTracker:
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
                 eth_MPLS = ether.ETH_TYPE_MPLS
 
-                match = parser.OFPMatch()
-                match.set_dl_type(eth_MPLS)
-                match.set_mpls_label(reservation.mpls_label)
+                nw_src = struct.unpack('!I', ipv4_to_bin(reservation.src))[0]
+                nw_dst = struct.unpack('!I', ipv4_to_bin(reservation.dst))[0]
+                # match = parser.OFPMatch(mpls_label=reservation.mpls_label, eth_type=eth_MPLS)
+                eth_IP = ether.ETH_TYPE_IP
+                match = parser.OFPMatch(eth_type=eth_IP, ipv4_dst=nw_dst, ipv4_src=nw_src)
+                # match.set_dl_type(eth_MPLS)
+                # match.set_mpls_label(reservation.mpls_label)
 
-                actions = [parser.OFPActionOutput(out_port),
-                    parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER)]
+                actions = [parser.OFPActionOutput(out_port)]
+                    # parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER)]
 
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
-                self.add_port_queue(path[i], in_port, queues)
-                self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
+                # self.add_port_queue(path[i], in_port, queues)
+                # self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
                 print "**** Mid-path switch: dpid=" + str(path[i].dpid) + " in_port=" + str(in_port_no) + " out_port=" + str(out_port)
 
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
-            self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
-            self.add_port_queue(path[-1], in_port, queues)
+            # self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
+            # self.add_port_queue(path[-1], in_port, queues)
 
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
-        # data = {
-        #     "match": {
-        #         "nw_dst": dst,
-        #         "nw_src": src
-        #     },
-        #     "actions": {
-        #         "queue": queue_id
-        #     }
-        # }
         data = {
             "match": {
                 "nw_dst": dst,
@@ -409,44 +407,49 @@ class QoSTracker:
         eth_IP = ether.ETH_TYPE_IP
         eth_MPLS = ether.ETH_TYPE_MPLS
 
-        match = parser.OFPMatch()
-        match.set_dl_type(eth_IP)
         nw_src = struct.unpack('!I', ipv4_to_bin(src_ip))[0]
-        match.set_ipv4_src(nw_src)
         nw_dst = struct.unpack('!I', ipv4_to_bin(dst_ip))[0]
-        match.set_ipv4_dst(nw_dst)
 
-        f = dp.ofproto_parser.OFPMatchField.make(
-            dp.ofproto.OXM_OF_MPLS_LABEL, mpls_label)
+
+        match = parser.OFPMatch(eth_type=eth_IP, ipv4_dst=nw_dst, ipv4_src=nw_src)
+
+        # f = dp.ofproto_parser.OFPMatchField.make(
+        #     dp.ofproto.OXM_OF_MPLS_LABEL, mpls_label)
+        # print "MPLS_LABEL: " + str(mpls_label)
 
         actions = [
-            parser.OFPActionPushMpls(eth_MPLS),
-            parser.OFPActionSetField(f),
-            parser.OFPActionOutput(out_port_no),
-            parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER)
+            # parser.OFPActionPushMpls(eth_MPLS),
+            # parser.OFPActionSetField(f),
+            parser.OFPActionOutput(out_port_no)
         ]
 
         self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
-        print "**** 1st switch: dpid=" + str(switch) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
+        print "**** 1st switch: dpid=" + str(switch.dpid) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
 
-    def add_egress_mpls_rule(self, in_port, out_port_no, mpls_label):
-        switch = self.db.get_switch_for_port(in_port)
+    def add_egress_mpls_rule(self, switch, out_port_no, mpls_label, dst, src):
+        # switch = self.db.get_switch_for_port(in_port)
         ryu_switch = self.get_ryu_switch_for_dpid(switch.dpid)
         datapath = ryu_switch.dp
         parser = datapath.ofproto_parser
 
+        nw_src = struct.unpack('!I', ipv4_to_bin(src))[0]
+        nw_dst = struct.unpack('!I', ipv4_to_bin(dst))[0]
         eth_IP = ether.ETH_TYPE_IP
-        eth_MPLS = ether.ETH_TYPE_MPLS
 
-        match = parser.OFPMatch()
-        match.set_dl_type(eth_MPLS)
-        match.set_mpls_label(mpls_label)
+        match = parser.OFPMatch(eth_type=eth_IP, ipv4_dst=nw_dst, ipv4_src=nw_src)
 
-        actions = [parser.OFPActionPopMpls(eth_IP),
+        # eth_MPLS = ether.ETH_TYPE_MPLS
+        # print "MPLS_LABEL: " + str(mpls_label)
+        # match = parser.OFPMatch(mpls_label=mpls_label, eth_type=eth_MPLS)
+        # match.set_dl_type(eth_MPLS)
+        # match.set_mpls_label(mpls_label)
+
+        # actions = [parser.OFPActionPopMpls(eth_MPLS),
+        actions = [
             parser.OFPActionOutput(out_port_no),
             parser.OFPActionOutput(datapath.ofproto.OFPP_CONTROLLER)]
         self.add_flow(datapath, 3, match, actions, FLOW_TABLE_ID)
-        print "**** Last switch: dpid=" + str(switch.dpid) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
+        print "**** Last switch: dpid=" + str(switch.dpid) + " out_port=" + str(out_port_no)
 
     def get_ryu_switch_for_dpid(self, dpid):
         return get_switch(self.ryu_app, dpid=int(dpid))[0]
