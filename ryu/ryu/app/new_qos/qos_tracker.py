@@ -120,8 +120,8 @@ class QoSTracker:
         self.db.delete_reservations()
         self.db.delete_queues()
         switches = self.db.get_all_switches()
-        # for switch in switches:
-        #     self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+        for switch in switches:
+            self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
 
         reservation = {
             "src": "10.0.0.4",
@@ -155,7 +155,7 @@ class QoSTracker:
 
             url = LOCALHOST + QOS_QUEUES_URI + switch_id
             request = requests.post(url, data=json.dumps(data))
-            #print "Request returned(port_queue_init): " + str(request.text)
+            print "Request returned(port_queue_init): " + str(request.text)
 
     def get_max_bw_for_topo(self):
         links = self.db.get_all_links()
@@ -381,8 +381,8 @@ class QoSTracker:
             "match": {
                 "nw_dst": dst,
                 "nw_src": src,
-                "nw_proto": "UDP",
-                "dl_type": "IPv4"
+                "nw_proto": "UDP"
+        #        "dl_type": "IPv4"
             },
             "actions": {
                 "queue": queue_id
@@ -390,7 +390,7 @@ class QoSTracker:
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
         request = requests.post(url, data=json.dumps(data))
-        # print "Request returned(queue_init): " + str(request.text)
+        print "Request returned(queue_init): " + str(request.text)
 
     def add_ingress_queue_rules(self, switch, in_port, src_ip, dst_ip, bw):
         pass
