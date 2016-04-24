@@ -345,8 +345,6 @@ class QoSTracker:
 
             for i in range(1, len(path) - 1):
                 # TODO: change this to include all switches
-                print i
-                print path[i]
                 ryu_switch = self.get_ryu_switch_for_dpid(path[i].dpid)
                 dp = ryu_switch.dp
                 parser = dp.ofproto_parser
@@ -364,8 +362,10 @@ class QoSTracker:
                 actions = [parser.OFPActionOutput(out_port)]
 
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
+                print "ADDING FLOW BIT IN MIDDLE"
                 self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
 
+            print "ADDEDING LAST QUEUE FLOW"
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
             self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
