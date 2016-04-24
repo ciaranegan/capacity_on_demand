@@ -72,19 +72,19 @@ HIGH_PRIORITY_QUEUE_ID = 1
 
 # Mapping of links to port_nos and their bandwidth
 SWITCH_MAP = {
-    s0_DPID: {
+    s0_DPID: { # DPID: 16
         3: {
             "dpid": s2_DPID,
             "bw": 1000
         }
     },
-    s1_DPID: {
+    s1_DPID: { # DPID: 32
         3: {
             "dpid": s2_DPID,
             "bw": 1000
         }
     },
-    s2_DPID: {
+    s2_DPID: { # DPID: 48
         1: {
             "dpid": s0_DPID,
             "bw": 1000
@@ -345,7 +345,7 @@ class QoSTracker:
                 dp = ryu_switch.dp
                 parser = dp.ofproto_parser
 
-                in_port_no = self.db.get_in_port_no_between_switches(path[i-1], path[i], SWITCH_MAP)
+                in_port_no = self.db.get_in_port_no_between_switches_1(path[i-1], path[i], SWITCH_MAP)
                 in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
 
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
@@ -361,7 +361,6 @@ class QoSTracker:
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
                 self.add_port_queue(path[i], in_port, queues)
                 self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
-
                 print "\nMid-path flow:"
                 print "In port: " + str(in_port.port_no)
                 print "Out port: " + str(out_port)
