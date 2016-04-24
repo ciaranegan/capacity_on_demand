@@ -126,7 +126,7 @@ class QoSTracker:
         reservation = {
             "src": "10.0.0.4",
             "dst": "10.0.0.1",
-            "bw": 500 
+            "bw": 750 
         }
         self.add_reservation(reservation)
 
