@@ -141,10 +141,11 @@ class DBConnection:
         for port in switch_map[str(src.dpid)]:
             if switch_map[str(src.dpid)][port]["dpid"] == str(dst.dpid):
                 port_no = port
+        print "Returning " + str(port_no)
         return port_no
 
     def get_in_port_no_between_switches_1(self, src, dst, switch_map):
-        print "Looking for in port between " + str(src) + " and " + str(dst)
+        print "**** Looking for in port between " + str(src) + " and " + str(dst)
         port_no = None
         for port in switch_map[str(dst.dpid)]:
             if switch_map[str(dst.dpid)][port]["dpid"] == str(src.dpid):
@@ -153,11 +154,12 @@ class DBConnection:
         return port_no
 
     def get_in_port_no_between_switches(self, src, dst, switch_map):
-        print "Looking for in port between " + str(src.dpid) + " and " + str(dst.dpid)
+        print "^^^^ Looking for in port between " + str(src.dpid) + " and " + str(dst.dpid)
         port_no = None
         for port in switch_map[str(dst.dpid)]:
             if switch_map[str(dst.dpid)][port]["dpid"] == str(src.dpid):
                 port_no = port
+        print "Returning " + str(port_no)
         return port_no
 
     def get_port_reservations_for_reservation(self, reservation):

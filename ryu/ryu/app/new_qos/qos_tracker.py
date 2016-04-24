@@ -155,7 +155,7 @@ class QoSTracker:
 
             url = LOCALHOST + QOS_QUEUES_URI + switch_id
             request = requests.post(url, data=json.dumps(data))
-            print "Request returned(port_queue_init): " + str(request.text)
+            #print "Request returned(port_queue_init): " + str(request.text)
 
     def get_max_bw_for_topo(self):
         links = self.db.get_all_links()
@@ -308,13 +308,13 @@ class QoSTracker:
         in_switch = self.db.get_switch_for_port(in_port)
         out_port = self.db.get_port_for_id(reservation.out_port)
         out_switch = self.db.get_switch_for_port(out_port)
+        print "OUT PORT=" + str(out_port.port_no)
 
         path = self.get_route_to_host(rsv["dst"], in_switch)
 
         total_bw = self.get_max_bandwidth_for_path(path)
 
         available_bw = self.get_available_bandwidth_for_path(path)
-        print "\n***********************HERLLLO*****************"
         if not path or len(path) <= 1:
             return
         else:
@@ -392,7 +392,7 @@ class QoSTracker:
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
         request = requests.post(url, data=json.dumps(data))
-        print "Request returned(queue_init): " + str(request.text)
+        # print "Request returned(queue_init): " + str(request.text)
 
     def add_ingress_queue_rules(self, switch, in_port, src_ip, dst_ip, bw):
         pass
