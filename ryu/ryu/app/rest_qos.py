@@ -1113,7 +1113,7 @@ class Match(object):
                     continue
             elif value == 0:
                 continue
-
+            print "KEY: " + str(key) " VAL: " + str(value)
             if key in Match._CONVERT:
                 conv = Match._CONVERT[key]
                 conv = dict((value, key) for key, value in conv.items())
@@ -1121,7 +1121,10 @@ class Match(object):
                 print "KEY: " + str(key)
                 print "VALUE: " + str(value)
                 print "_MATCH.CONVERT: " + str(Match._CONVERT)
-                match.setdefault(key, conv[value])
+                if key == 35020:
+                    match.setdefault(key, 'IPv4')
+                else:
+                    match.setdefault(key, conv[value])
             else:
                 match.setdefault(key, value)
 
