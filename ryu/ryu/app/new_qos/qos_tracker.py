@@ -345,7 +345,7 @@ class QoSTracker:
                 dp = ryu_switch.dp
                 parser = dp.ofproto_parser
 
-                in_port_no = self.db.get_in_port_no_between_switches(path[i-1], path[i+1])
+                in_port_no = self.db.get_in_port_no_between_switches(path[i-1], path[i+1], SWITCH_MAP)
                 in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
 
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
@@ -355,8 +355,7 @@ class QoSTracker:
                 match.set_dl_type(eth_MPLS)
                 match.set_mpls_label(reservation.mpls_label)
 
-                actions = [parser.OFPActionOutput(out_port),
-                            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)]
+                actions = [parser.OFPActionOutput(out_port)]
 
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
                 self.add_port_queue(path[i], in_port, queues)
@@ -365,7 +364,7 @@ class QoSTracker:
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
             self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
-            self.add_port_queue(path[i], in_port, queues)
+            self.add_port_queue(path[-1], in_port, queues)
 
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
@@ -422,8 +421,7 @@ class QoSTracker:
         actions = [
             parser.OFPActionPushMpls(eth_MPLS),
             parser.OFPActionSetField(f),
-            parser.OFPActionOutput(out_port_no),
-            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)
+            parser.OFPActionOutput(out_port_no)
         ]
 
         self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
@@ -443,7 +441,7 @@ class QoSTracker:
 
         actions = [parser.OFPActionPopMpls(eth_IP),
             parser.OFPActionOutput(out_port_no),
-            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)]
+            parser.OFPActionOutput(datapath.ofproto.OFPP_CONTROLLER)]
         self.add_flow(datapath, 3, match, actions, FLOW_TABLE_ID)
 
     def get_ryu_switch_for_dpid(self, dpid):
