@@ -105,8 +105,8 @@ class QoSTracker:
         self.db = DBConnection('sqlite:///my_db.db')
         self._current_mpls_label = 0
         self._flows_added = 0
-        # t = threading.Thread(target=self.delayed_start)
-        #t.start()
+        t = threading.Thread(target=self.delayed_start)
+        t.start()
 
     def get_port_name_for_port_no(self, port_no, dpid):
         switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])
@@ -270,7 +270,8 @@ class QoSTracker:
 
     def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
-        self.ryu_app.add_flow(datapath, priority, match, actions, table_id, buffer_id)
+        # self.ryu_app.add_flow(datapath, priority, match, actions, table_id, buffer_id)
+        self.ryu_app.add_flow(datapath, priority, match, actions, buffer_id)
         if self._flows_added > 167:
             print "Add flow: dpid-" + str(datapath.id) + " match-" + str(match) + " actions-" + str(actions) + " count:" + str(self._flows_added)
     # def get_flows_for_switch(self, switch):
