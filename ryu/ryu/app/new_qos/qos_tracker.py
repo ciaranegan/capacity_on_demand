@@ -84,7 +84,7 @@ SWITCH_MAP = {
             "bw": 1000
         }
     },
-    s2_DPID: { # DPID: 48
+    s2_DPID: {
         1: {
             "dpid": s0_DPID,
             "bw": 1000
@@ -346,6 +346,7 @@ class QoSTracker:
                 parser = dp.ofproto_parser
 
                 in_port_no = self.db.get_in_port_no_between_switches_1(path[i-1], path[i], SWITCH_MAP)
+                print "path[i]=" + str(path[i].dpid)
                 in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
 
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
