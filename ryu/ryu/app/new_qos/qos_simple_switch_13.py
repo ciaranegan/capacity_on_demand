@@ -96,7 +96,10 @@ class SimpleSwitch13(app_manager.RyuApp):
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
 
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
+        mpls_packet = pkt.get_protocols(mpls.mpls)
+        if mpls_packet:
+            if mpls_packet[0]:
+                self.logger.info("packet in %s %s %s %s %s", dpid, src, dst, in_port, str(mpls_packet[0]))
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
@@ -125,3 +128,20 @@ class SimpleSwitch13(app_manager.RyuApp):
         out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
                                   in_port=in_port, actions=actions, data=data)
         datapath.send_msg(out)
+
+    @set_ev_cls(event.EventSwitchEnter)
+    def get_topology_data(self, ev):
+        switch_list = get_all_switch(self)
+        self.qos.add_switches(switch_list)
+
+        links_list = get_all_link(self)
+        self.qos.add_links(links_list)
+
+    @set_ev_cls(ofp_event.EventOFPErrorMsg,
+        [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    def _handle_reply(self, ev):
+        msg = ev.msg
+        datapath = msg.datapath
+        self._error_count+=1
+        print "***** ERROR - TYPE:" + str(msg.type) + " CODE:" + str(msg.code) + "DPID:" + str(datapath.id) + " COUNT:" + str(self._error_count)
+
