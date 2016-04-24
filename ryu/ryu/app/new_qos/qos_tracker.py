@@ -345,7 +345,7 @@ class QoSTracker:
                 dp = ryu_switch.dp
                 parser = dp.ofproto_parser
 
-                in_port_no = self.db.get_in_port_no_between_switches(path[i-1], path[i+1], SWITCH_MAP)
+                in_port_no = self.db.get_in_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
                 in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
 
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
