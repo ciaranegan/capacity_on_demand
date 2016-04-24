@@ -4,8 +4,8 @@ import struct
 import time
 import threading
 
-from ryu.app.qos.models import *
-from ryu.app.qos.dbconnection import DBConnection
+from ryu.app.new_qos.models import *
+from ryu.app.new_qos.dbconnection import DBConnection
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 from ryu.ofproto import ether
 from ryu.lib.ip import ipv4_to_bin
@@ -335,10 +335,10 @@ class QoSTracker:
             self.add_port_queue(in_switch, in_port, queues)
 
             self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
-
+            print "***********************HERLLLO*****************"
 
             # Add flow to port on the way out.
-
+            print "Path: " + str(path)
             for i in range(1, len(path) - 1):
                 # TODO: change this to include all switches
                 ryu_switch = self.get_ryu_switch_for_dpid(path[i].dpid)
