@@ -360,7 +360,7 @@ class QoSTracker:
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
                 self.add_port_queue(path[i], in_port, queues)
                 self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
-                print "Mid-path switch: dpid=" + str(path[i].dpid) + " in_port=" + str(in_port_no) + " out_port=" + str(out_port)
+                print "**** Mid-path switch: dpid=" + str(path[i].dpid) + " in_port=" + str(in_port_no) + " out_port=" + str(out_port)
 
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
@@ -427,7 +427,7 @@ class QoSTracker:
         ]
 
         self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
-        print "1st switch: dpid=" + str(switch) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
+        print "**** 1st switch: dpid=" + str(switch) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
 
     def add_egress_mpls_rule(self, in_port, out_port_no, mpls_label):
         switch = self.db.get_switch_for_port(in_port)
@@ -446,7 +446,7 @@ class QoSTracker:
             parser.OFPActionOutput(out_port_no),
             parser.OFPActionOutput(datapath.ofproto.OFPP_CONTROLLER)]
         self.add_flow(datapath, 3, match, actions, FLOW_TABLE_ID)
-        print "Last switch: dpid=" + str(switch.dpid) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
+        print "**** Last switch: dpid=" + str(switch.dpid) + " in_port=" + str(in_port.port_no) + " out_port=" + str(out_port_no)
 
     def get_ryu_switch_for_dpid(self, dpid):
         return get_switch(self.ryu_app, dpid=int(dpid))[0]
