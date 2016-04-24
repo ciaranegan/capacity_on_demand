@@ -353,15 +353,14 @@ class QoSTracker:
 
                 out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
                 eth_MPLS = ether.ETH_TYPE_MPLS
-
+                print "OUT PORT: " + str(out_port)
                 match = parser.OFPMatch()
                 match.set_dl_type(eth_MPLS)
                 match.set_mpls_label(reservation.mpls_label)
 
-                actions = [parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER),
-                    parser.OFPActionOutput(out_port)]
+                actions = [parser.OFPActionOutput(out_port)]
 
-                self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
+                self.add_flow(dp, 1, match, actions, table_id=FLOW_TABLE_ID)
 
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
@@ -421,7 +420,7 @@ class QoSTracker:
             parser.OFPActionOutput(out_port_no)
         ]
 
-        self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
+        self.add_flow(dp, 1, match, actions, FLOW_TABLE_ID)
 
     def add_egress_mpls_rule(self, in_port, out_port_no, mpls_label):
         switch = self.db.get_switch_for_port(in_port)
@@ -438,7 +437,7 @@ class QoSTracker:
 
         actions = [parser.OFPActionPopMpls(eth_IP),
             parser.OFPActionOutput(out_port_no)]
-        self.add_flow(datapath, 3, match, actions, FLOW_TABLE_ID)
+        self.add_flow(datapath, 1, match, actions, FLOW_TABLE_ID)
 
     def get_ryu_switch_for_dpid(self, dpid):
         return get_switch(self.ryu_app, dpid=int(dpid))[0]
