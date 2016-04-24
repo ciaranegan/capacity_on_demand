@@ -355,7 +355,8 @@ class QoSTracker:
                 match.set_dl_type(eth_MPLS)
                 match.set_mpls_label(reservation.mpls_label)
 
-                actions = [parser.OFPActionOutput(out_port)]
+                actions = [parser.OFPActionOutput(out_port),
+                    parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER)]
 
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
                 self.add_port_queue(path[i], in_port, queues)
@@ -421,7 +422,8 @@ class QoSTracker:
         actions = [
             parser.OFPActionPushMpls(eth_MPLS),
             parser.OFPActionSetField(f),
-            parser.OFPActionOutput(out_port_no)
+            parser.OFPActionOutput(out_port_no),
+            parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER)
         ]
 
         self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
