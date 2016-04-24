@@ -1117,6 +1117,10 @@ class Match(object):
             if key in Match._CONVERT:
                 conv = Match._CONVERT[key]
                 conv = dict((value, key) for key, value in conv.items())
+                print "CONV: " + str(conv)
+                print "KEY: " + str(key)
+                print "VALUE: " + str(value)
+                print "_MATCH.CONVERT: " + str(Match._CONVERT)
                 match.setdefault(key, conv[value])
             else:
                 match.setdefault(key, value)

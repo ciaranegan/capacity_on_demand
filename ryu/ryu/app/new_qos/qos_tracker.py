@@ -342,7 +342,7 @@ class QoSTracker:
             queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
             self.add_port_queue(in_switch, in_port, queues)
 
-            #self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
+            self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
 
 
             # Add flow to port on the way out.
@@ -384,6 +384,7 @@ class QoSTracker:
                 "nw_dst": dst,
                 "nw_src": src,
                 "nw_proto": "UDP",
+                "dl_type": "IPv4"
             },
             "actions": {
                 "queue": queue_id
