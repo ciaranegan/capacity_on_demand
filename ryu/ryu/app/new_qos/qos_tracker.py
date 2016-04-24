@@ -154,9 +154,8 @@ class QoSTracker:
             }
 
             url = LOCALHOST + QOS_QUEUES_URI + switch_id
-            print "URL: " + str(url) 
             request = requests.post(url, data=json.dumps(data))
-            print str(request.text)
+            print "Request returned(port_queue_init): " + str(request.text)
 
     def get_max_bw_for_topo(self):
         links = self.db.get_all_links()
@@ -271,7 +270,6 @@ class QoSTracker:
     def add_flow(self, datapath, priority, match, actions, table_id, buffer_id=None):
         self._flows_added += 1
         self.ryu_app.add_flow(datapath, priority, match, actions, buffer_id)
-        print "Add flow: dpid-" + str(datapath.id) + " match-" + str(match) + " actions-" + str(actions) + " count:" + str(self._flows_added)
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
@@ -314,10 +312,8 @@ class QoSTracker:
         path = self.get_route_to_host(rsv["dst"], in_switch)
 
         total_bw = self.get_max_bandwidth_for_path(path)
-        print "TOTAL_BW: " + str(total_bw)
 
         available_bw = self.get_available_bandwidth_for_path(path)
-        print "AVAILABLE_BW: " + str(available_bw)
 
         if not path or len(path) <= 1:
             return
@@ -363,11 +359,9 @@ class QoSTracker:
                             parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)]
 
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
-                print "ADDING FLOW BIT IN MIDDLE"
                 self.add_port_queue(path[i], in_port, queues)
                 self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
 
-            print "ADDEDING LAST QUEUE FLOW"
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
             self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
@@ -394,12 +388,11 @@ class QoSTracker:
             },
             "actions": {
                 "queue": queue_id
-            },
-            "priority": 3
+            }
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
         request = requests.post(url, data=json.dumps(data))
-        print str(request.text)
+        print "Request returned(queue_init): " + str(request.text)
 
     def add_ingress_queue_rules(self, switch, in_port, src_ip, dst_ip, bw):
         pass
