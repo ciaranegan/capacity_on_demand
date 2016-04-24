@@ -359,8 +359,7 @@ class QoSTracker:
                 match.set_dl_type(eth_MPLS)
                 match.set_mpls_label(reservation.mpls_label)
 
-                actions = [parser.OFPActionOutput(out_port),
-                            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)]
+                actions = [parser.OFPActionOutput(out_port)]
 
                 self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
                 print "ADDING FLOW BIT IN MIDDLE"
@@ -428,8 +427,7 @@ class QoSTracker:
         actions = [
             parser.OFPActionPushMpls(eth_MPLS),
             parser.OFPActionSetField(f),
-            parser.OFPActionOutput(out_port_no),
-            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)
+            parser.OFPActionOutput(out_port_no)
         ]
 
         self.add_flow(dp, 3, match, actions, FLOW_TABLE_ID)
@@ -449,7 +447,7 @@ class QoSTracker:
 
         actions = [parser.OFPActionPopMpls(eth_IP),
             parser.OFPActionOutput(out_port_no),
-            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER)]
+            parser.OFPActionOutput(datapath.ofproto.OFPP_CONTROLLER)]
         self.add_flow(datapath, 3, match, actions, FLOW_TABLE_ID)
 
     def get_ryu_switch_for_dpid(self, dpid):
