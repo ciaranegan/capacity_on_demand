@@ -137,7 +137,7 @@ class QoSTracker:
         data = {
             "port_name": port_name,
             "type": OVS_LINK_TYPE,
-            "max_rate": str(max_bw),
+           # "max_rate": str(max_bw),
             "queues": queues
         }
         url = LOCALHOST + QOS_QUEUES_URI + switch_id
@@ -463,7 +463,7 @@ class QoSTracker:
                 "ip_dscp": "26"
             },
             "actions": {
-                "queue": "1"
+                "queue": 1
             }
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
@@ -479,8 +479,8 @@ class QoSTracker:
                 "nw_proto": "UDP"
             },
             "actions": {
-                "mark": "26",
-                "queue": "1"
+                "mark": 26,
+                "queue": 1
             }
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id

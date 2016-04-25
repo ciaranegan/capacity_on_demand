@@ -796,7 +796,7 @@ class QoS(object):
         try:
             self.ofctl.mod_flow_entry(self.dp, flow, cmd)
         except:
-            raise ValueError('Invalid rule parameter.')
+            raise ValueError('Invalid rule parameter. heya')
 
         qos_id = QoS._cookie_to_qosid(cookie)
         msg = {'result': 'success',
