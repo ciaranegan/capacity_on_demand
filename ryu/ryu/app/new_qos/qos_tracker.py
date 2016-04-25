@@ -120,8 +120,8 @@ class QoSTracker:
         self.db.delete_reservations()
         self.db.delete_queues()
         switches = self.db.get_all_switches()
-        # for switch in switches:
-        #     self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+        for switch in switches:
+            self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
 
         reservation = {
             "src": "10.0.0.4",
@@ -137,7 +137,7 @@ class QoSTracker:
         data = {
             "port_name": port_name,
             "type": OVS_LINK_TYPE,
-            "max_rate": max_bw,
+            "max_rate": str(max_bw),
             "queues": queues
         }
         url = LOCALHOST + QOS_QUEUES_URI + switch_id
@@ -418,20 +418,20 @@ class QoSTracker:
             last_port_reservation = self.db.add_port_reservation(reservation.id, last_port.id)
             
             # Get the out port of the first switch and add the ingress rule
-            first_switch_out_port_no = self.db.get_port_between_switches(in_switch, path[1], SWITCH_MAP)
-            self.add_ingress_rules(switch, first_switch_out_port_no, reservation.src, reservation.dst, reservation.bw, max_bw)
+            first_switch_out_port_no = self.db.get_out_port_no_between_switches(in_switch, path[1], SWITCH_MAP)
+            self.add_ingress_rules(in_switch, first_switch_out_port_no, reservation.src, reservation.dst, reservation.bw, total_bw)
 
             for i in range(1, len(path) - 1):
-                in_port_no = self.get_in_port_no_between_switches_1(path[i-1], path[i], SWITCH_MAP)
-                in_port = self.get_port_for_port_no(in_port_no, path[i].dpid)
+                in_port_no = self.db.get_in_port_no_between_switches_1(path[i-1], path[i], SWITCH_MAP)
+                in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
 
-                out_port = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
-                self.add_switch_rules(path[i], out_port.port_no, reservation.src, reservation.dst, reservation.bw, max_bw)
+                out_port_no = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
+                self.add_switch_rules(path[i], out_port_no, reservation.src, reservation.dst, reservation.bw, total_bw)
 
-        in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
-        in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid, SWITCH_MAP)
+        in_port_no = self.db.get_in_port_no_between_switches_1(path[-1], path[-2], SWITCH_MAP)
+        in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
         out_port = self.db.get_port_for_id(reservation.out_port)
-        self.add_switch_rules(path[-1], out_port.port_no, reservation.src, reservation.dst, reservation.bw, max_bw)
+        self.add_switch_rules(path[-1], out_port.port_no, reservation.src, reservation.dst, reservation.bw, total_bw)
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -468,7 +468,7 @@ class QoSTracker:
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
         request = requests.post(url, data=json.dumps(data))
-        print "Packet checking request returned: " + str(request.txt)
+        print "Packet checking request returned: " + str(request.text)
 
     def add_packet_marking_flow(self, switch, src, dst):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -488,30 +488,19 @@ class QoSTracker:
         print "Packet marking request returned: " + str(request.text)
 
     def add_ingress_rules(self, switch, out_port_no, src_ip, dst_ip, bw, max_bw):
-        # Convert ip adresses
-        # TODO: maybe not neccesary
-        nw_src = struct.unpack('!I', ipv4_to_bin(src_ip))[0]
-        print "Converted src from " + str(src_ip) + " to " + str(nw_src)
-        nw_dst = struct.unpack('!I', ipv4_to_bin(dst_ip))[0]
-
         # Add queues
-        queues = [{"max_rate": str(max_rate)}, {"min_rate": str(bw)}]
-        self.add_egress_port_queue(switch, out_port_no, queues)
+        queues = [{"max_rate": str(max_bw)}, {"min_rate": str(bw)}]
+        self.add_egress_port_queue(switch, out_port_no, queues, max_bw)
 
         # Mark the packets on their way in
-        self.add_packet_marking_flow(self, switch, nw_src, nw_dst)
+        self.add_packet_marking_flow(switch, src_ip, dst_ip)
 
     def add_switch_rules(self, switch, out_port_no, src_ip, dst_ip, bw, max_bw):
-        # Convert ip adresses
-        nw_src = struct.unpack('!I', ipv4_to_bin(src_ip))[0]
-        nw_dst = struct.unpack('!I', ipv4_to_bin(dst_ip))[0]
-
         # Add queues
-        queues = [{"max_rate": str(max_rate)}, {"min_rate": str(bw)}]
-        self.add_port_queue(switch, out_port_no, queues)
+        queues = [{"max_rate": str(max_bw)}, {"min_rate": str(bw)}]
+        self.add_egress_port_queue(switch, out_port_no, queues, max_bw)
 
-        # Add flow for checking packets
-        self.add_packet_checking_flow(switch, nw_src, nw_dst)
+        self.add_packet_checking_flow(switch)
 
     def add_ingress_mpls_rule(self, in_port, out_port_no, mpls_label, src_ip, dst_ip):
         switch = self.db.get_switch_for_port(in_port)
