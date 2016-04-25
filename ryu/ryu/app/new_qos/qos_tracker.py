@@ -130,9 +130,10 @@ class QoSTracker:
         }
         self.add_reservation(reservation)
 
-    def add_port_queue(self, switch, port, queues):
+    def add_port_queue(self, switch, port_no, queues):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
-        port_name = self.get_port_name_for_port_no(port.port_no, switch.dpid)
+        port_name = self.get_port_name_for_port_no(port_no, switch.dpid)
+        print "PORT NAME: " + str(port_name)
 
         for queue in queues:
             if "max_rate" in queue:
@@ -143,8 +144,8 @@ class QoSTracker:
                 min_rate = queue["min_rate"]
             else:
                 min_rate = None
-            queue = self.db.add_queue(port, HIGH_PRIORITY_QUEUE_ID,
-                max_rate=max_rate, min_rate=min_rate)
+    #        queue = self.db.add_queue(port, HIGH_PRIORITY_QUEUE_ID,
+    #            max_rate=max_rate, min_rate=min_rate)
 
             data = {
                 "port_name": port_name,
@@ -309,7 +310,6 @@ class QoSTracker:
         in_switch = self.db.get_switch_for_port(in_port)
         out_port = self.db.get_port_for_id(reservation.out_port)
         out_switch = self.db.get_switch_for_port(out_port)
-        print "OUT PORT=" + str(out_port.port_no)
 
         path = self.get_route_to_host(rsv["dst"], in_switch)
 
@@ -323,6 +323,7 @@ class QoSTracker:
             out_port_reservation = self.db.add_port_reservation(reservation.id, out_port.id)
 
             in_switch_out_port_no = self.db.get_out_port_no_between_switches(in_switch, path[1], SWITCH_MAP)
+            print "^^^^^^^^^^^^^^ Out port no returned: " + str(in_switch_out_port_no) + " should be 3"
             self.add_ingress_mpls_rule(in_port, in_switch_out_port_no,
                 reservation.mpls_label, reservation.src, reservation.dst)
 
@@ -333,10 +334,14 @@ class QoSTracker:
             self.add_egress_mpls_rule(out_switch, last_port.port_no,
                 reservation.mpls_label, reservation.src, reservation.dst)
 
-            max_bw = self.get_max_bw_for_topo()
+            # TODO: remove this
+            # max_bw = self.get_max_bw_for_topo()
+            max_bw = 500
             queues = [{"max_rate": str(max_bw)}, {"min_rate": str(reservation.bw)}]
-            self.add_port_queue(in_switch, in_port, queues)
-
+            in_switch_out_port = self.db.get_port_for_port_no(in_switch_out_port_no, in_switch.dpid)
+            print "^^^^^^^^^^^^^^^^ in_switch_out_port_no: " + str(in_switch_out_port.port_no) + " should be 3"
+            self.add_port_queue(in_switch, in_switch_out_port_no, queues)
+            
             self.add_queue_flow(in_switch, in_port, reservation.src, reservation.dst)
             
 
@@ -364,15 +369,16 @@ class QoSTracker:
                 actions = [parser.OFPActionOutput(out_port)]
                     # parser.OFPActionOutput(dp.ofproto.OFPP_CONTROLLER)]
 
+                out_p = self.db.get_port_for_port_no(out_port, path[i].dpid)
                 # self.add_flow(dp, 3, match, actions, table_id=FLOW_TABLE_ID)
-                self.add_port_queue(path[i], in_port, queues)
+                self.add_port_queue(path[i], out_p.port_no, queues)
                 self.add_queue_flow(path[i], in_port, reservation.src, reservation.dst)
                 print "**** Mid-path switch: dpid=" + str(path[i].dpid) + " in_port=" + str(in_port_no) + " out_port=" + str(out_port)
 
             in_port_no = self.db.get_in_port_no_between_switches(path[-1], path[-2], SWITCH_MAP)
             in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
             self.add_queue_flow(path[-1], in_port, reservation.src, reservation.dst)
-            self.add_port_queue(path[-1], in_port, queues)
+            self.add_port_queue(path[-1], in_port.port_no, queues)
 
 
     def add_queue_flow(self, switch, port, src, dst, queue_id=HIGH_PRIORITY_QUEUE_ID):
