@@ -460,7 +460,7 @@ class QoSTracker:
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
         data = {
             "match": {
-                "ip_dscp": "26"
+                "ip_dscp": 26
             },
             "actions": {
                 "queue": 1
