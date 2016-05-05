@@ -103,7 +103,7 @@ class QoSTracker:
 
     def __init__(self):
         self.db = DBConnection('sqlite:///my_db.db')
-        self.topology_manager(db)
+        self.topology_manager = TopologyManager(self.db)
         self._current_mpls_label = 0
         self._flows_added = 0
 

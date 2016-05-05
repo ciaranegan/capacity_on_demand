@@ -1,4 +1,7 @@
 
+s0_DPID = "16"
+s1_DPID = "32"
+s2_DPID = "48"
 
 # Mapping of links to port_nos and their bandwidth
 SWITCH_MAP = {

@@ -8,7 +8,7 @@ qos_tracker = QoSTracker()
 def hello_world():
     return 'Hello World!'
 
-@app.route('/reservation', methods=['POST'])
+@app.route('/add_reservation', methods=['POST'])
 def add_reservation():
     # POST request
     # curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"src": "10.0.0.1", "dst": "10.0.0.4", "bw": 10}' http://localhost:5000/add_reservation
