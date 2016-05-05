@@ -116,13 +116,6 @@ class QoSTracker:
         for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
 
-        reservation = {
-            "src": "10.0.0.4",
-            "dst": "10.0.0.1",
-            "bw": 750000
-        }
-        self.add_reservation(reservation)
-
     def add_egress_port_queue(self, switch, port_no, queues, max_bw):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
         port_name = self.get_port_name_for_port_no(port_no, switch.dpid)
