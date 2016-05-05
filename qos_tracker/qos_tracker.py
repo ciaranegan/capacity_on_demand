@@ -201,33 +201,6 @@ class QoSTracker:
         for switch in switch_data:
             s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
 
-    def get_route_to_host(self, dst_ip, switch, prev_switch=None):
-        # TODO: account for cycles
-        # TODO: check for other topologies
-        # Check if host is already connected to the switch
-        hosts = self.db.get_hosts_for_switch(switch.dpid)
-        if dst_ip in [host.ip for host in hosts]:
-            # We've found our host
-            for h in hosts:
-                if h.ip == dst_ip:
-                    return [switch]
-        # Get any connected switches
-        if prev_switch:
-            neighbours = self.db.get_switch_neighbours(switch.dpid, exclude=prev_switch)
-        else:
-            neighbours = self.db.get_switch_neighbours(switch.dpid)
-
-        if len(neighbours) <= 0:
-            return None
-
-        for n in neighbours:
-            route = self.get_route_to_host(dst_ip, n, switch)
-            if route is not None:
-                route.insert(0, switch)
-                break
-
-        return route
-
     def add_reservation(self, rsv):
         reservation = self.db.add_reservation(rsv, self.generate_mpls_label())
 
@@ -237,7 +210,7 @@ class QoSTracker:
         last_port = self.db.get_port_for_id(reservation.out_port)
         last_switch = self.db.get_switch_for_port(last_port)
 
-        path = self.get_route_to_host(rsv["dst"], in_switch)
+        path = self.topology_manager.get_route_to_host(rsv["dst"], in_switch)
 
         total_bw = self.topology_manager.get_max_bandwidth_for_path(path)
         print "Total Bandwidth: " + str(total_bw)
