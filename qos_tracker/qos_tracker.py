@@ -4,8 +4,8 @@ import struct
 import time
 import threading
 
-from ryu.app.new_qos.models import *
-from ryu.app.new_qos.dbconnection import DBConnection
+from models import *
+from dbconnection import DBConnection
 from ryu.topology.api import get_all_switch, get_all_link, get_switch
 from ryu.ofproto import ether
 from ryu.lib.ip import ipv4_to_bin
@@ -116,12 +116,12 @@ class QoSTracker:
         for switch in switches:
             self.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
 
-        # reservation = {
-        #     "src": "10.0.0.4",
-        #     "dst": "10.0.0.1",
-        #     "bw": 750000
-        # }
-        # self.add_reservation(reservation)
+        reservation = {
+            "src": "10.0.0.4",
+            "dst": "10.0.0.1",
+            "bw": 750000
+        }
+        self.add_reservation(reservation)
 
     def add_egress_port_queue(self, switch, port_no, queues, max_bw):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -135,12 +135,10 @@ class QoSTracker:
         }
         url = LOCALHOST + QOS_QUEUES_URI + switch_id
         request = requests.post(url, data=json.dumps(data))
-        print "Egress port request returned: " + str(request.text)
 
     def add_port_queue(self, switch, port_no, queues):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
         port_name = self.get_port_name_for_port_no(port_no, switch.dpid)
-        print "PORT NAME: " + str(port_name)
 
         for queue in queues:
             if "max_rate" in queue:
@@ -236,7 +234,6 @@ class QoSTracker:
         return route
 
     def add_reservation(self, rsv):
-        print "Adding reservation"
         reservation = self.db.add_reservation(rsv, self.generate_mpls_label())
 
         in_port = self.db.get_port_for_id(reservation.in_port)
