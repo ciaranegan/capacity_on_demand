@@ -241,8 +241,9 @@ class QoSTracker:
 
         total_bw = self.topology_manager.get_max_bandwidth_for_path(path)
         print "Total Bandwidth: " + str(total_bw)
-        available_bw = self.topology_manager.get_available_bandwidth_for_path(path)
 
+        available_bw = self.topology_manager.get_available_bandwidth_for_path(path)
+        print "Available Bandwidth: " + str(available_bw)
         if not path or len(path) <= 1:
             return
         else:
