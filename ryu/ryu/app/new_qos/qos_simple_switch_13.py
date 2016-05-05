@@ -22,12 +22,12 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet, mpls
 from ryu.lib.packet import ether_types
 
-# Topology discovery
-from ryu.topology import event
-from ryu.topology.api import get_all_switch, get_all_link, get_switch
+# # Topology discovery
+# from ryu.topology import event
+# from ryu.topology.api import get_all_switch, get_all_link, get_switch
 
-from ryu.app.new_qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID, PIR_TABLE_ID, CIR_TABLE_ID
-from ryu.app.rest_qos import QoSController
+# from ryu.app.new_qos.qos_tracker import QoSTracker, SWITCH_MAP, FLOW_TABLE_ID, PIR_TABLE_ID, CIR_TABLE_ID
+# from ryu.app.rest_qos import QoSController
 
 
 class SimpleSwitch13(app_manager.RyuApp):
@@ -36,7 +36,7 @@ class SimpleSwitch13(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleSwitch13, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        self.qos = QoSTracker(self)
+        # self.qos = QoSTracker(self)
         self._error_count = 0
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -130,13 +130,13 @@ class SimpleSwitch13(app_manager.RyuApp):
                                   in_port=in_port, actions=actions, data=data)
         datapath.send_msg(out)
 
-    @set_ev_cls(event.EventSwitchEnter)
-    def get_topology_data(self, ev):
-        switch_list = get_all_switch(self)
-        self.qos.add_switches(switch_list)
+    # @set_ev_cls(event.EventSwitchEnter)
+    # def get_topology_data(self, ev):
+    #     switch_list = get_all_switch(self)
+    #     self.qos.add_switches(switch_list)
 
-        links_list = get_all_link(self)
-        self.qos.add_links(links_list)
+    #     links_list = get_all_link(self)
+    #     self.qos.add_links(links_list)
 
     @set_ev_cls(ofp_event.EventOFPErrorMsg,
         [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
