@@ -20,7 +20,6 @@ def add_reservation():
 
     return Response({"reservation_id": reservation_id}, status=200, mimetype="application/json")
 
-
 if __name__ == '__main__':
     qos_tracker.start()
     app.run()
