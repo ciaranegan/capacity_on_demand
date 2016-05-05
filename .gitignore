@@ -1,5 +1,3 @@
 envs/
 
 *.pyc
-
-my_db.db
