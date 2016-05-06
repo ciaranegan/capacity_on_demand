@@ -25,7 +25,8 @@ class QoSTracker:
         self.db.delete_queues()
         switches = self.db.get_all_switches()
         for switch in switches:
-            self.ryu.put_ovsdb_addr(switch.dpid)
+            ryu_response = self.ryu.put_ovsdb_addr(switch.dpid)
+            print "++ Adding ovsdb_addr for dpid:" + str(switch.dpid) + " returned: " + str(ryu_response.text)
 
     def generate_mpls_label(self):
         self._current_mpls_label += 1
@@ -92,14 +93,18 @@ class QoSTracker:
     def add_ingress_rules(self, switch, out_port_no, src_ip, dst_ip, bw, max_bw):
         # Add queues
         queues = [{"max_rate": str(max_bw)}, {"min_rate": str(bw)}]
-        self.ryu.add_egress_port_queue(switch, out_port_no, queues, max_bw)
+        ryu_response = self.ryu.add_egress_port_queue(switch, out_port_no, queues, max_bw)
+        print "++ Adding port queue for dpid:" + str(switch.dpid) + " returned: " + str(ryu_response.text)
 
         # Mark the packets on their way in
-        self.ryu.add_packet_marking_flow(switch, src_ip, dst_ip)
+        ryu_response = self.ryu.add_packet_marking_flow(switch, src_ip, dst_ip)
+        print "++ Adding packet marking flow for dpid:" + str(switch.dpid) + " returned: " + str(ryu_response.text)
 
     def add_switch_rules(self, switch, out_port_no, src_ip, dst_ip, bw, max_bw):
         # Add queues
         queues = [{"max_rate": str(max_bw)}, {"min_rate": str(bw)}]
-        self.ryu.add_egress_port_queue(switch, out_port_no, queues, max_bw)
+        ryu_response = self.ryu.add_egress_port_queue(switch, out_port_no, queues, max_bw)
+        print "++ Adding port queue for dpid:" + str(switch.dpid) + " returned: " + str(ryu_response.text)
 
-        self.ryu.add_packet_checking_flow(switch)
+        ryu_response = self.ryu.add_packet_checking_flow(switch)
+        print "++ Adding packet checking flow for dpid:" + str(switch.dpid) + " returned: " + str(ryu_response.text)

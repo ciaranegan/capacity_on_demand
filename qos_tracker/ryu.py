@@ -33,8 +33,7 @@ class RyuManager:
             }
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
-        request = requests.post(url, data=json.dumps(data))
-        print "Packet checking request returned: " + str(request.text)
+        return requests.post(url, data=json.dumps(data))
 
     def add_packet_marking_flow(self, switch, src, dst):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -50,8 +49,7 @@ class RyuManager:
             }
         }
         url = LOCALHOST + QOS_RULES_URI + switch_id
-        request = requests.post(url, data=json.dumps(data))
-        print "Packet marking request returned: " + str(request.text)
+        return requests.post(url, data=json.dumps(data))
 
     def add_egress_port_queue(self, switch, port_no, queues, max_bw):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -64,12 +62,12 @@ class RyuManager:
             "queues": queues
         }
         url = LOCALHOST + QOS_QUEUES_URI + switch_id
-        request = requests.post(url, data=json.dumps(data))
+        return requests.post(url, data=json.dumps(data))
 
     def put_ovsdb_addr(self, dpid):
         switch_id = self.get_switch_id_for_dpid(dpid)
         url = LOCALHOST + CONF_SWITCH_URI + switch_id + "/ovsdb_addr"
-        r = requests.put(url, data=json.dumps(OVSDB_ADDR))
+        return requests.put(url, data=json.dumps(OVSDB_ADDR))
 
     def get_port_name_for_port_no(self, port_no, dpid):
         switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])
