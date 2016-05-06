@@ -7,10 +7,11 @@ import threading
 from models import *
 from topology_1_constants import *
 from topology import TopologyManager
+from ryu import RyuManager
 from dbconnection import DBConnection
-from ryu.topology.api import get_all_switch, get_all_link, get_switch
-from ryu.ofproto import ether
-from ryu.lib.ip import ipv4_to_bin
+#from ryu.topology.api import get_all_switch, get_all_link, get_switch
+#from ryu.ofproto import ether
+#from ryu.lib.ip import ipv4_to_bin
 from IPython import embed
 
 
@@ -28,7 +29,7 @@ class QoSTracker:
         self.db.delete_queues()
         switches = self.db.get_all_switches()
         for switch in switches:
-            self.ryu.put_ovsdb_addr(switch.dpid, OVSDB_ADDR)
+            self.ryu.put_ovsdb_addr(switch.dpid)
 
     # def add_port_queue(self, switch, port_no, queues):
     #     switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -99,7 +100,6 @@ class QoSTracker:
         last_switch = self.db.get_switch_for_port(last_port)
 
         path = self.topology_manager.get_route_to_host(rsv["dst"], in_switch)
-
         total_bw = self.topology_manager.get_max_bandwidth_for_path(path)
         print "Total Bandwidth: " + str(total_bw)
 

@@ -36,9 +36,6 @@ class QoSLink(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     src = Column(ForeignKey("port.switch"))
     dst = Column(ForeignKey("port.switch"), nullable=True)
-    # Todo: add shit to populate this
-    src_port = Column(ForeignKey("port.id"))
-    dst_port = Column(ForeignKey("port.id"))
     bandwidth = Column(Integer)
 
 

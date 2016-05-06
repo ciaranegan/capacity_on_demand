@@ -1,7 +1,7 @@
 import requests
 import json
 
-import topology_1_constants
+from topology_1_constants import *
 
 LOCALHOST = "http://localhost:8080"
 CONF_SWITCH_URI = "/v1.0/conf/switches/"
@@ -70,10 +70,10 @@ class RyuManager:
         url = LOCALHOST + QOS_QUEUES_URI + switch_id
         request = requests.post(url, data=json.dumps(data))
 
-    def put_ovsdb_addr(self, dpid, ovsdb_addr):
+    def put_ovsdb_addr(self, dpid):
         switch_id = self.get_switch_id_for_dpid(dpid)
         url = LOCALHOST + CONF_SWITCH_URI + switch_id + "/ovsdb_addr"
-        r = requests.put(url, data=json.dumps(ovsdb_addr))
+        r = requests.put(url, data=json.dumps(OVSDB_ADDR))
 
     def get_port_name_for_port_no(self, port_no, dpid):
         switch_no = str(SWITCH_NUMBER_TABLE[str(dpid)])

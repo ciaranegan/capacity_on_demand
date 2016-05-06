@@ -1,8 +1,8 @@
-from ryu.app.qos.models import *
+from models import *
 
 from sqlalchemy import create_engine
 from sqlalchemy.sql import exists
-from ryu.app.qos.models import Base
+from models import Base
 from sqlalchemy.orm import sessionmaker
 
 
