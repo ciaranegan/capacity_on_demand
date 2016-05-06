@@ -17,11 +17,7 @@ PORT_NAME_STR = "s{}-eth{}"
 class RyuManager:
 
     def __init__(self, db):
-        print "hello ryu_manager"
         self.db = db
-
-    # def get_switch_for_dpid(self, dpid):
-    #     return self.db.get_switch_for_dpid(dpid)
 
     def get_switch_id_for_dpid(self, dpid):
         return SWITCH_LOOKUP[str(dpid)]
