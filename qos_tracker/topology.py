@@ -56,22 +56,25 @@ class TopologyManager:
         total_bw = self.get_max_bandwidth_for_path(path)
         if len(path) > 2:
             prev_switch = path[0]
-            avail_link_bw = []
+            avail_link_bws = []
             for i in range(1, len(path)):
                 link = self.db.get_link_between_switches(prev_switch, path[i])
-                link_bw = link.bandwidth
-                port_reservations = self.db.get_port_reservations_for_link(link, SWITCH_MAP)
-                if port_reservations:
-                    reservations = []
-                    for p in port_reservations:
-                        reservation = self.db.get_reservation_for_id(p.reservation)
-                        reservations.append(reservation)
-                    for r in reservations:
-                        link_bw -= reservation.bw
-                avail_link_bw.append(link_bw)
+                available_link_bw = self.get_available_bw_for_link(link)
+                avail_link_bws.append(available_link_bw)
                 prev_switch = path[i]
+        return min(avail_link_bws)
 
-        return min(avail_link_bw)
+    def get_available_bw_for_link(self, link):
+        link_bw = link.bandwidth
+        port_reservations = self.db.get_port_reservations_for_link(link, SWITCH_MAP)
+        if port_reservations:
+            reservations = []
+            for p in port_reservations:
+                reservation = self.db.get_reservation_for_id(p.reservation)
+                reservations.append(reservation)
+            for r in reservations:
+                link_bw -= reservation.bw
+        return link_bw
 
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
@@ -99,3 +102,33 @@ class TopologyManager:
                 break
 
         return route
+
+
+    def build_graph(self):
+        switches = self.db.get_all_switches()
+        links = self.db.get_all_links()
+
+        nodes = []
+        edges = []
+
+        for switch in switches:
+            nodes.append(Node(switch.dpid))
+
+        for link in links:
+            node_1 = self.db.get_switch_for_dpid(link.src)
+            node_2 = self.db.get_switch_for_dpid(link.dst)
+
+
+class Node:
+
+    def __init__(self, dpid, edges=None):
+        self.dpid = dpid
+        self.edges = edges
+
+
+class Edge:
+
+    def __init__(self, node_1, node_2, weight):
+        self.node_1 = node_1
+        self.node_2 = node_2
+        self.weight = weight
