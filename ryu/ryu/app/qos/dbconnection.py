@@ -54,6 +54,18 @@ class DBConnection:
                 .filter(QoSPort.switch == port.dpid and
                     QoSPort.port_no == port.port_no).first()
 
+    def add_port_1(self, port_no, dpid):
+        exist = self.session.query(exists()
+                    .where(QoSPort.switch == dpid)
+                    .where(QoSPort.port_no == port_no)).scalar()
+        if not exist:
+            port = QoSPort(switch=dpid, port_no=port_no)
+            return self.add_record(port)
+        else:
+            return self.session.query(QoSPort) \
+                .filter(QoSPort.switch == port.dpid and
+                    QoSPort.port_no == port.port_no).first()
+
     def add_host(self, host_data, port_id):
         exist = self.session.query(
             exists().where(QoSHost.mac == host_data["mac"])).scalar()
@@ -63,6 +75,24 @@ class DBConnection:
             return self.add_record(host)
         else:
             return self.session.query(QoSHost.mac == host_data["mac"]).first()
+
+
+    def add_switch_1(self, dpid, host_data):
+        exist = self.session.query(
+            exists().where(QoSSwitch.dpid == dpid)).scalar()
+        if not exist:
+            qos_switch = QoSSwitch(dpid=switch.dp.id)
+            for port_no in host_data:
+                port = self.add_port_1(port_no, dpid)
+                if int(port.port_no) in host_data:
+                    self.add_host(
+                        host_data[port.port_no],
+                        port.id
+                    )
+            return self.add_record(qos_switch)
+        else:
+            return self.session.query(QoSSwitch) \
+                .filter(QoSSwitch.dpid == switch.dp.id).first()
 
     def add_switch(self, switch, host_data):
         exist = self.session.query(
@@ -311,6 +341,30 @@ class DBConnection:
     def delete_queues(self):
         queues = self.get_all_queues()
         for q in queues:
+            self.session.delete(q)
+        self.session.commit()
+
+    def delete_switches(self):
+        switches = self.get_all_switches()
+        for q in switches:
+            self.session.delete(q)
+        self.session.commit()
+
+    def delete_links(self):
+        links = self.get_all_links()
+        for q in links:
+            self.session.delete(q)
+        self.session.commit()
+
+    def delete_ports(self):
+        ports = self.get_all_ports()
+        for q in ports:
+            self.session.delete(q)
+        self.session.commit()
+
+    def delete_hosts(self):
+        hosts = self.get_all_hosts()
+        for q in hosts:
             self.session.delete(q)
         self.session.commit()
 

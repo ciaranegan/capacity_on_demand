@@ -4,6 +4,7 @@ import json
 from topology_1_constants import *
 
 LOCALHOST = "http://localhost:8080"
+# LOCALHOST = "http://10.0.2.15:8080"
 CONF_SWITCH_URI = "/v1.0/conf/switches/"
 QOS_QUEUES_URI = "/qos/queue/"
 QOS_RULES_URI = "/qos/rules/"
@@ -21,6 +22,20 @@ class RyuManager:
 
     def get_switch_id_for_dpid(self, dpid):
         return SWITCH_LOOKUP[str(dpid)]
+
+    def add_single_switch_packet_checking_flow(self, switch, dst_ip):
+        switch_id = self.get_switch_id_for_dpid(switch.dpid)
+        data = {
+            "match":{
+                "nw_dst": str(dst_ip),
+                "nw_proto": "UDP",
+            },
+            "actions": {
+                "queue": 1
+            }
+        }
+        url = LOCALHOST + QOS_RULES_URI + switch_id
+        return requests.post(url, data=json.dumps(data))
 
     def add_packet_checking_flow(self, switch):
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
@@ -58,7 +73,7 @@ class RyuManager:
         data = {
             "port_name": port_name,
             "type": OVS_LINK_TYPE,
-           # "max_rate": str(max_bw),
+            "max_rate": str(max_bw),
             "queues": queues
         }
         url = LOCALHOST + QOS_QUEUES_URI + switch_id

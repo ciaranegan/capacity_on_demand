@@ -1,38 +1,59 @@
+from topology_2_constants import *
+# s0_DPID = "16"
+# s1_DPID = "32"
+# s2_DPID = "48"
 
-s0_DPID = "16"
-s1_DPID = "32"
-s2_DPID = "48"
+# SWITCHES = [s0_DPID]
 
-# Mapping of links to port_nos and their bandwidth
-SWITCH_MAP = {
-    s0_DPID: { # DPID: 16
-        3: {
-            "dpid": s2_DPID,
-            "bw": 1000000
-        }
-    },
-    s1_DPID: { # DPID: 32
-        3: {
-            "dpid": s2_DPID,
-            "bw": 1000000
-        }
-    },
-    s2_DPID: {
-        1: {
-            "dpid": s0_DPID,
-            "bw": 1000000
-        },
-        2: {
-            "dpid": s1_DPID,
-            "bw": 1000000
-        }
-    }
-}
+# HOST_MAP = {
+#     1: "10.0.0.1",
+#     2: "10.0.0.2",
+#     3: "10.0.0.3",
+#     4: "10.0.0.4"
+# }
+
+# # Mapping of links to port_nos and their bandwidth
+# SWITCH_MAP = {
+#     s0_DPID: { # DPID: 16
+#         3: {
+#             "dpid": s2_DPID,
+#             "bw": 1000000
+#         }
+#     },
+#     s1_DPID: { # DPID: 32
+#         3: {
+#             "dpid": s2_DPID,
+#             "bw": 1000000
+#         }
+#     },
+#     s2_DPID: {
+#         1: {
+#             "dpid": s0_DPID,
+#             "bw": 1000000
+#         },
+#         2: {
+#             "dpid": s1_DPID,
+#             "bw": 1000000
+#         }
+#     }
+# }
+
+# SWITCH_MAP = {
+    
+# }
 
 class TopologyManager:
 
     def __init__(self, db):
         self.db = db
+
+    def init_db(self):
+        self.db.delete_switches()
+        self.db.delete_links()
+        self.db.delete_ports()
+        self.db.delete_hosts()
+        for s in SWITCHES:
+            self.db.add_switch_1(s, HOST_MAP)
 
     def get_max_bandwidth_for_path(self, path):
         # TODO: doesn't work for smaller paths
@@ -48,8 +69,10 @@ class TopologyManager:
                 prev_switch = path[i]
         else:
             print "SHORT PATH, LEN=" + str(len(path))
-
-        return bw
+        if bw is not None:
+            return bw
+        else:
+            return 1000
 
     def get_available_bandwidth_for_path(self, path):
         # TODO: doesn't work for smaller paths
@@ -62,6 +85,8 @@ class TopologyManager:
                 available_link_bw = self.get_available_bw_for_link(link)
                 avail_link_bws.append(available_link_bw)
                 prev_switch = path[i]
+        else:
+            return 1000
         return min(avail_link_bws)
 
     def get_available_bw_for_link(self, link):
