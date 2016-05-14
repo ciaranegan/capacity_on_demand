@@ -88,9 +88,9 @@ class DBConnection:
             qos_switch = QoSSwitch(dpid=dpid)
             for port_no in host_data[dpid]:
                 port = self.add_port_1(port_no, dpid)
-                if int(port.port_no) in host_data:
+                if int(port.port_no) in host_data[dpid]:
                     self.add_host(
-                        host_data[port.port_no],
+                        host_data[dpid][port.port_no],
                         port.id
                     )
             return self.add_record(qos_switch)

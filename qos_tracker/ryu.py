@@ -1,7 +1,7 @@
 import requests
 import json
 
-from topology_1_constants import *
+from topology_2_constants import *
 
 LOCALHOST = "http://localhost:8080"
 # LOCALHOST = "http://10.0.2.15:8080"
@@ -67,7 +67,9 @@ class RyuManager:
         return requests.post(url, data=json.dumps(data))
 
     def add_egress_port_queue(self, switch, port_no, queues, max_bw):
+        print "Adding port queue"
         switch_id = self.get_switch_id_for_dpid(switch.dpid)
+        print "Switch id: " + str(switch_id)
         port_name = self.get_port_name_for_port_no(port_no, switch.dpid)
       
         data = {
