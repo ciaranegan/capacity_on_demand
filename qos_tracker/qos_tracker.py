@@ -55,14 +55,16 @@ class QoSTracker:
 
     def add_single_switch_rules(self, switch, out_port, reservation):
         queues = [{"max_rate": "500000"}, {"min_rate": str(reservation.bw)}]
-        self.ryu.add_egress_port_queues(switch, out_port.port_no, queues, 1000000)
-        self.ryu.add_single_switch_packet_checking_flow(switch, reservation.dst)
+        response = self.ryu.add_egress_port_queues(switch, out_port.port_no, queues, 1000000)
+        print response.text
+        respone = self.ryu.add_single_switch_packet_checking_flow(switch, reservation.dst)
+        print response.text
         print "Added single switch_rules"
 
     def add_reservation(self, rsv):
         print "Adding reservation"
         reservation = self.db.add_reservation(rsv, self.generate_mpls_label())
-
+        print "Added"
         in_port = self.db.get_port_for_id(reservation.in_port)
         in_switch = self.db.get_switch_for_port(in_port)
 
@@ -80,7 +82,8 @@ class QoSTracker:
         if len(path) == 1:
             print "Correct path length"
             switch = path[0]
-            self.add_single_switch_rules(reservation.id)
+            print "Correct switch"
+            self.add_single_switch_rules(switch, last_port, reservation)
 
         else:
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
