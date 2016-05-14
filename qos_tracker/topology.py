@@ -72,7 +72,7 @@ class TopologyManager:
         if bw is not None:
             return bw
         else:
-            return 1000
+            return 1000000
 
     def get_available_bandwidth_for_path(self, path):
         # TODO: doesn't work for smaller paths
@@ -86,7 +86,7 @@ class TopologyManager:
                 avail_link_bws.append(available_link_bw)
                 prev_switch = path[i]
         else:
-            return 1000
+            return 1000000
         return min(avail_link_bws)
 
     def get_available_bw_for_link(self, link):

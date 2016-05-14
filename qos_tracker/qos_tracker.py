@@ -54,8 +54,8 @@ class QoSTracker:
             s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
 
     def add_single_switch_rules(self, switch, out_port, reservation):
-        queues = [{"max_rate": "500"}, {"min_rate": str(reservation.bw)}]
-        self.ryu.add_egress_port_queues(switch, out_port.port_no, queues, 1000)
+        queues = [{"max_rate": "500000"}, {"min_rate": str(reservation.bw)}]
+        self.ryu.add_egress_port_queues(switch, out_port.port_no, queues, 1000000)
         self.ryu.add_single_switch_packet_checking_flow(switch, reservation.dst)
         print "Added single switch_rules"
 
