@@ -4,7 +4,7 @@ import struct
 import time
 import threading
 from models import *
-from topology_1_constants import *
+from topology_2_constants import *
 from topology import TopologyManager
 from ryu import RyuManager
 from dbconnection import DBConnection
@@ -14,7 +14,7 @@ from IPython import embed
 class QoSTracker:
 
     def __init__(self):
-        self.db = DBConnection('sqlite:///my_db.db')
+        self.db = DBConnection('sqlite:///my_db_1.db')
         self.topology_manager = TopologyManager(self.db)
         self.ryu = RyuManager(self.db)
         self._current_mpls_label = 0
@@ -23,6 +23,7 @@ class QoSTracker:
     def start(self):
         self.db.delete_reservations()
         self.db.delete_queues()
+        self.topology_manager.init_db()
         switches = self.db.get_all_switches()
         for switch in switches:
             ryu_response = self.ryu.put_ovsdb_addr(switch.dpid)
@@ -52,6 +53,12 @@ class QoSTracker:
         for switch in switch_data:
             s = self.db.add_switch(switch, HOST_MAP[str(switch.dp.id)])
 
+    def add_single_switch_rules(self, switch, out_port, reservation):
+        queues = [{"max_rate": "500"}, {"min_rate": str(reservation.bw)}]
+        self.ryu.add_egress_port_queues(switch, out_port.port_no, queues, 1000)
+        self.ryu.add_single_switch_packet_checking_flow(switch, reservation.dst)
+        print "Added single switch_rules"
+
     def add_reservation(self, rsv):
         reservation = self.db.add_reservation(rsv, self.generate_mpls_label())
 
@@ -67,8 +74,13 @@ class QoSTracker:
 
         available_bw = self.topology_manager.get_available_bandwidth_for_path(path)
         print "Available Bandwidth: " + str(available_bw)
-        if not path or len(path) <= 1:
+        if not path:
             return
+        if len(path) == 1:
+            print "Correct path length"
+            switch = path[0]
+            self.add_single_switch_rules(reservation.id)
+
         else:
             in_port_reservation = self.db.add_port_reservation(reservation.id, in_port.id)
             # TODO: this is stupid
@@ -85,10 +97,10 @@ class QoSTracker:
                 out_port_no = self.db.get_out_port_no_between_switches(path[i], path[i+1], SWITCH_MAP)
                 self.add_switch_rules(path[i], out_port_no, reservation.src, reservation.dst, reservation.bw, total_bw)
 
-        in_port_no = self.db.get_in_port_no_between_switches_1(path[-1], path[-2], SWITCH_MAP)
-        in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
-        out_port = self.db.get_port_for_id(reservation.out_port)
-        self.add_switch_rules(path[-1], out_port.port_no, reservation.src, reservation.dst, reservation.bw, total_bw)
+            in_port_no = self.db.get_in_port_no_between_switches_1(path[-1], path[-2], SWITCH_MAP)
+            in_port = self.db.get_port_for_port_no(in_port_no, path[i].dpid)
+            out_port = self.db.get_port_for_id(reservation.out_port)
+            self.add_switch_rules(path[-1], out_port.port_no, reservation.src, reservation.dst, reservation.bw, total_bw)
 
     def add_ingress_rules(self, switch, out_port_no, src_ip, dst_ip, bw, max_bw):
         # Add queues
