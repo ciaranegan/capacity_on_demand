@@ -29,6 +29,7 @@ class RyuManager:
             "match":{
                 "nw_dst": str(dst_ip),
                 "nw_proto": "UDP",
+                "tp_dst": "5002"
             },
             "actions": {
                 "queue": 1
