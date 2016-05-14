@@ -60,6 +60,7 @@ class QoSTracker:
         print "Added single switch_rules"
 
     def add_reservation(self, rsv):
+        print "Adding reservation"
         reservation = self.db.add_reservation(rsv, self.generate_mpls_label())
 
         in_port = self.db.get_port_for_id(reservation.in_port)

@@ -104,6 +104,7 @@ class TopologyManager:
     def get_route_to_host(self, dst_ip, switch, prev_switch=None):
         # TODO: account for cycles
         # TODO: check for other topologies
+
         # Check if host is already connected to the switch
         hosts = self.db.get_hosts_for_switch(switch.dpid)
         if dst_ip in [host.ip for host in hosts]:
