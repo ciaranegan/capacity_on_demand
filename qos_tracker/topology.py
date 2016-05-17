@@ -1,4 +1,4 @@
-from topology_2_constants import *
+from topology_1_constants import *
 # s0_DPID = "16"
 # s1_DPID = "32"
 # s2_DPID = "48"

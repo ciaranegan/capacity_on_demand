@@ -4,7 +4,7 @@ import struct
 import time
 import threading
 from models import *
-from topology_2_constants import *
+from topology_1_constants import *
 from topology import TopologyManager
 from ryu import RyuManager
 from dbconnection import DBConnection
@@ -14,7 +14,7 @@ from IPython import embed
 class QoSTracker:
 
     def __init__(self):
-        self.db = DBConnection('sqlite:///my_db_1.db')
+        self.db = DBConnection('sqlite:///my_db.db')
         self.topology_manager = TopologyManager(self.db)
         self.ryu = RyuManager(self.db)
         self._current_mpls_label = 0
@@ -23,7 +23,7 @@ class QoSTracker:
     def start(self):
         self.db.delete_reservations()
         self.db.delete_queues()
-        self.topology_manager.init_db()
+        # self.topology_manager.init_db()
         switches = self.db.get_all_switches()
         for switch in switches:
             ryu_response = self.ryu.put_ovsdb_addr(switch.dpid)
