@@ -1,7 +1,7 @@
 import requests
 import json
 
-from topology_2_constants import *
+from topology_1_constants import *
 
 LOCALHOST = "http://localhost:8080"
 # LOCALHOST = "http://10.0.2.15:8080"
